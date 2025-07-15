@@ -16,7 +16,7 @@ radius = 100
 categories = ["free food", "free samples"]
 limit = 1
 # Unix date
-start_date = "1752598519"
+start_date = "1746140230"
 
 params = {
     "categories" : categories,
