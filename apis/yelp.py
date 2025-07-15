@@ -1,6 +1,7 @@
 import json 
 import os 
 import requests 
+from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,29 +14,37 @@ headers = {"Authorization" : f"Bearer {key_value}", "accept" : "application/json
 # defining query parameters 
 location = "Washington, DC"
 radius = 100
-categories = ["free food", "free samples"]
-limit = 1
+categories = ["free food", "free samples", "free food events"]
+limit = 5
+
 # Unix date
 start_date = "1746140230"
 
-params = {
-    "categories" : categories,
-    "limit" : 1,
-    "is_free" : True,
-    "radius" : radius,
-    "location" : location,
-    "start_date" : start_date
-}
+def search_events(location: str, terms: str=""):
 
-response = requests.get(url, headers=headers, params=params)
+    params = {
+        "categories" : terms,
+        "limit" : limit,
+        "is_free" : True,
+        "radius" : radius,
+        "location" : location,
+        "start_date" : start_date
+    }
+    if terms.strip():
+        params["categories"] = ",".join(
+            quote_plus(t.strip()) for t in terms.split(",") if t.strip()
+        )
 
-if response.status_code == 200:
-    try: 
-        data = response.json()
-        print(json.dumps(data, indent=4))
-    except json.JSONDecodeError:
-        print("error with decoding JSON")
-        print("raw text:", response.text)
-else:
-    print(f"API request failed with: {response.status_code}")
-    print("raw text:", response.text)
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+
+    return [
+        {
+            "title" : event["name"],
+            "location" : event["location"]["display_address"][0],
+            "date" : event["time_start"],
+            "tags" : event.get("category", []),
+            "url" : event["event_site_url"]
+        }
+        for event in response.json().get("events", [])
+    ]
