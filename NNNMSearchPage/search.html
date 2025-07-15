@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nom Nom Near Me - Find Free Food Nearby</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Poppins Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="bg-gray-100 font-poppins">
+  <div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-white shadow-md py-4">
+      <div class="container mx-auto px-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <img src="img/logo.png" alt="App Logo" class="w-8 h-8 object-contain" />
+          <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+        </div>
+        <nav class="flex items-center space-x-6">
+          <a href="#" class="text-gray-600 hover:text-orange-500">Home</a>
+          <a href="#" class="text-gray-600 hover:text-orange-500">Account</a>
+          <a href="#" class="text-gray-600 hover:text-orange-500">About</a>
+          <span class="text-sm text-gray-600 hidden sm:inline">Welcome back, <strong>User</strong></span>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+      <h1 class="text-3xl font-bold text-center mb-8">Find Delicious Events Near You</h1>
+
+      <!-- Search Form -->
+      <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10">
+        <div class="p-6">
+          <h2 class="text-xl font-semibold mb-4">Search Nearby Events</h2>
+
+          <div class="space-y-4">
+            <!-- Location Input -->
+            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+              <span class="text-xl mr-2">📍</span>
+              <div class="flex-grow">
+                <label class="block text-sm text-gray-600 mb-1">Location</label>
+                <input type="text" id="location" placeholder="Enter address" class="w-full bg-transparent outline-none">
+              </div>
+            </div>
+
+            <!-- Interests Input -->
+            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+              <span class="text-xl mr-2">🔍</span>
+              <div class="flex-grow">
+                <label class="block text-sm text-gray-600 mb-1">Interests</label>
+                <input type="text" id="interests" placeholder="free food, community, people" class="w-full bg-transparent outline-none">
+              </div>
+            </div>
+
+            <!-- Search Button -->
+            <button id="searchButton" class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700"
+>
+  Search Events
+              Search Events
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div id="resultsContainer" class="max-w-3xl mx-auto hidden">
+        <h2 class="text-xl font-semibold mb-4">Results:</h2>
+        <div id="results" class="space-y-4"></div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
+      <div class="container mx-auto px-4 text-center">
+        <p>© 2025 Nom Nom Near Me - Find the best food events around you</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const sampleEvents = [
+      {
+        title: "Food Giveaway at Community Center",
+        location: "123 Main St, Downtown",
+        date: "Today, 2:00 PM - 4:00 PM",
+        tags: ["free food", "community"]
+      },
+      {
+        title: "Networking Mixer with Complimentary Appetizers",
+        location: "Business Hub, 456 Market St",
+        date: "Tomorrow, 6:00 PM - 8:00 PM",
+        tags: ["networking", "people", "free food"]
+      },
+      {
+        title: "Free Pizza in Union Square",
+        location: "Union Square Park",
+        date: "Saturday, 12:00 PM - 2:00 PM",
+        tags: ["free food", "outdoors"]
+      },
+      {
+        title: "Cultural Food Festival",
+        location: "City Convention Center",
+        date: "This Weekend, All Day",
+        tags: ["community", "food tasting", "people"]
+      }
+    ];
+
+    function displayResults(events) {
+      const resultsContainer = document.getElementById('results');
+      resultsContainer.innerHTML = '';
+
+      if (events.length === 0) {
+        resultsContainer.innerHTML = '<p class="text-gray-500">No events found matching your criteria.</p>';
+        return;
+      }
+
+      events.forEach(event => {
+        const eventElement = document.createElement('div');
+        eventElement.className = 'result-item bg-white rounded-lg shadow-md p-4 border-l-4 border-orange-500';
+
+        eventElement.innerHTML = `
+          <h3 class="font-semibold text-lg">${event.title}</h3>
+          <div class="flex items-center text-gray-600 mt-1">
+              <span class="mr-1">📍</span>
+              <span>${event.location}</span>
+          </div>
+          <div class="flex items-center text-gray-600 mt-1">
+              <span class="mr-1">🕒</span>
+              <span>${event.date}</span>
+          </div>
+          <div class="mt-2 flex flex-wrap gap-2">
+              ${event.tags.map(tag => `<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">${tag}</span>`).join('')}
+          </div>
+        `;
+
+        resultsContainer.appendChild(eventElement);
+      });
+    }
+
+    document.getElementById('searchButton').addEventListener('click', () => {
+      const interests = document.getElementById('interests').value.toLowerCase();
+      let filteredEvents = sampleEvents;
+
+      if (interests) {
+        const interestTerms = interests.split(',').map(term => term.trim());
+        filteredEvents = sampleEvents.filter(event =>
+          interestTerms.some(term =>
+            event.tags.some(tag => tag.includes(term)) ||
+            event.title.toLowerCase().includes(term)
+          )
+        );
+      }
+      document.getElementById('resultsContainer').classList.remove('hidden');
+      displayResults(filteredEvents);
+    });
+
+    // Load default events
+    displayResults(sampleEvents);
+  </script>
+</body>
+</html>
