@@ -3,6 +3,7 @@ import os
 import requests 
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
+from dateutil import parser
 
 load_dotenv()
 
@@ -19,6 +20,14 @@ limit = 5
 
 # Unix date
 start_date = "1746140230"
+
+def format_date(iso_str):
+    
+    try: 
+
+        months = []
+    except:
+        return "Invalid Date"
 
 def search_events(location: str, terms: str=""):
 

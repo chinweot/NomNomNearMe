@@ -3,25 +3,21 @@ const sampleEvents = [
     title: "Food Giveaway at Community Center",
     location: "123 Main St, Downtown",
     date: "Today, 2:00 PM - 4:00 PM",
-    tags: ["free food", "community"],
   },
   {
     title: "Networking Mixer with Complimentary Appetizers",
     location: "Business Hub, 456 Market St",
     date: "Tomorrow, 6:00 PM - 8:00 PM",
-    tags: ["networking", "people", "free food"],
   },
   {
     title: "Free Pizza in Union Square",
     location: "Union Square Park",
     date: "Saturday, 12:00 PM - 2:00 PM",
-    tags: ["free food", "outdoors"],
   },
   {
     title: "Cultural Food Festival",
     location: "City Convention Center",
     date: "This Weekend, All Day",
-    tags: ["community", "food tasting", "people"],
   },
 ];
 
@@ -29,6 +25,7 @@ function displayResults(events) {
   const resultsContainer = document.getElementById("results");
   resultsContainer.innerHTML = ""; // Clear previous results
 
+  console.log(events);
   if (!events || events.length === 0) {
     resultsContainer.innerHTML =
       '<p class="text-gray-500">No events found matching your criteria.</p>';
@@ -49,14 +46,6 @@ function displayResults(events) {
       <div class="flex items-center text-gray-600 mt-1">
           <span class="mr-1">🕒</span>
           <span>${event.date}</span>
-      </div>
-      <div class="mt-2 flex flex-wrap gap-2">
-          ${event.tags
-            .map(
-              (tag) =>
-                `<span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded">${tag}</span>`
-            )
-            .join("")}
       </div>
       `;
 
