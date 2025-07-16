@@ -5,6 +5,10 @@ app = Flask(__name__)
 # doing the search page for now for presentations 
 @app.route("/") 
 def home():
+    return render_template("login.html")
+
+@app.route("/search")
+def search():
     return render_template("search.html")
 
 @app.route("/api/events")
@@ -15,7 +19,7 @@ def api_events():
         return jsonify({"error": "location is required"}), 400
     
     try: 
-        data = search_events(location, term, radius_m=1600)
+        data = search_events(location, term)
         return jsonify(data)
     except Exception as e: 
         return jsonify({"error" : str(e)}), 502

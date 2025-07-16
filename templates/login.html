@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- External CSS -->
-    <link rel="stylesheet" href="globals.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}" />
     <link rel="stylesheet" href="style.css" />
   </head>
 
@@ -24,7 +24,7 @@
       <section class="md:w-1/2 p-10 flex flex-col justify-center items-center">
         <!-- Logo -->
         <img
-          src="img/logo.png"
+          src="{{ url_for('static', filename='img/logo.png')}}"
           alt="Nom Nom Near Me logo"
           class="mb-8 w-20 h-20 object-contain"
         />
@@ -78,8 +78,8 @@
 
       <!-- Right: Image -->
       <section class="md:w-1/2 hidden md:block">
-        <img
-          src="img/loginpeoplephoto.jpeg"
+        <img 
+          src="{{ url_for('static', filename='img/loginpeoplephoto.jpeg')}}"
           alt="People enjoying food"
           class="object-cover w-full h-full"
         />
@@ -92,7 +92,7 @@
         // You can add login validation here if needed
 
         // Redirect to search page after "login"
-        window.location.href = '../NNNMSearchPage/search.html';
+        window.location.href = '{{ url_for("search") }}';
       });
     </script>
   </body>
