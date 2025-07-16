@@ -15,7 +15,7 @@ def api_events():
         return jsonify({"error": "location is required"}), 400
     
     try: 
-        data = search_events(loc, term, radius_m=1600)
+        data = search_events(location, term, radius_m=1600)
         return jsonify(data)
     except Exception as e: 
         return jsonify({"error" : str(e)}), 502
