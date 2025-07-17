@@ -3,7 +3,7 @@ import os
 import requests 
 from urllib.parse import quote_plus
 from dotenv import load_dotenv
-from dateutil import parser
+#from dateutil import parser
 
 load_dotenv()
 
