@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultsContainer = document.getElementById('resultsContainer');
   const results = document.getElementById('results');
 
-  // Add references for saved events container and div (make sure you add these to your HTML)
+  // Add references for saved events container and div
   const savedEventsContainer = document.getElementById('savedEventsContainer');
   const savedEventsDiv = document.getElementById('savedEvents');
 
