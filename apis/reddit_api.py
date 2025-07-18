@@ -2,7 +2,22 @@ import os
 import praw
 import json
 from datetime import datetime
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+# Initialize Gemini model (text only)
+model_text = genai.GenerativeModel("gemini-2.5-flash")
+
+def genai_call(prompt: str) -> str:
+    try:
+        response = model_text.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        print("GenAI error:", e)
+        return "No response"
 
 city_to_subreddit = {
     "nyc": "nyc", "new york": "nyc",
