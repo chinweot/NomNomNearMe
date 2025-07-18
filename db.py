@@ -14,6 +14,21 @@ def init_auth_db():
             password TEXT NOT NULL
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS saved_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            event_title TEXT NOT NULL,
+            event_description TEXT,  -- Currently not used by your API structure
+            event_date TEXT,
+            event_location TEXT,
+            event_url TEXT,
+            event_data TEXT,         -- Designed to store the full JSON data
+            saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+                   """)
     conn.commit()
     conn.close()
 

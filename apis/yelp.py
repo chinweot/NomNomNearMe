@@ -29,7 +29,7 @@ def format_date(iso_str):
     except:
         return "Invalid Date"
 
-def search_events(location: str, terms: str=""):
+def search_yelp_events(location, terms, yelp_api_key, limit, radius):
 
     params = {
         "categories" : terms,
@@ -47,13 +47,19 @@ def search_events(location: str, terms: str=""):
     response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
 
-    return [
-        {
-            "title" : event["name"],
-            "location" : event["location"]["display_address"][0],
-            "date" : event["time_start"],
-            "tags" : event.get("category", []),
-            "url" : event["event_site_url"]
-        }
-        for event in response.json().get("events", [])
-    ]
+    yelp_events = []
+    for event in response.json().get("events", []):
+        yelp_events.append(
+            {
+                "source": "yelp",                     
+                "external_id": event["id"],            
+                "global_id": f"yelp_{event['id']}",
+                "title" : event["name"],
+                "location" : event["location"]["display_address"][0],
+                "date" : event["time_start"],
+                "tags" : event.get("category", []),
+                "url" : event["event_site_url"]
+            }
+        )
+
+    return yelp_events

@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-from apis.yelp import search_events
 from db import init_auth_db, register_user, login_user 
 from forms import RegistrationForm, LoginForm
+from apis.event_handler import search_all_events
 import os
 
 app = Flask(__name__)
@@ -68,7 +68,7 @@ def search():
 def about():
     return render_template('about.html')
 
-# ---------- YELP API ENDPOINT ----------
+# ---------- FETCH API DATA ----------
 
 @app.route("/api/events")
 def api_events():
@@ -78,7 +78,7 @@ def api_events():
         return jsonify({"error": "location is required"}), 400
     
     try: 
-        data = search_events(location, term)
+        data = search_all_events(location, term)
         return jsonify(data)
     except Exception as e: 
         return jsonify({"error" : str(e)}), 502
