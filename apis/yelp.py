@@ -31,24 +31,48 @@ def format_date(iso_str):
 
 def search_yelp_events(location, terms, yelp_api_key, limit, radius):
 
-    params = {
-        "categories" : terms,
-        "limit" : limit,
-        "is_free" : True,
-        "radius" : radius,
-        "location" : location,
-        "start_date" : start_date
+    # Map user dietary terms to Yelp categories
+    dietary_map = {
+        "vegan": "vegan",
+        "vegetarian": "vegetarian",
+        "gluten-free": "gluten_free",
+        "kosher": "kosher",
+        "halal": "halal",
+        "organic": "organic",
+        "healthy": "healthmarkets",
+        "juice": "juicebars",
+        "salad": "salad",
+        "seafood": "seafood",
+        "bbq": "bbq",
+        "pizza": "pizza",
+        "desserts": "desserts"
     }
+
+    # Filter and map terms to Yelp categories
+    categories_list = []
     if terms.strip():
-        params["categories"] = ",".join(
-            quote_plus(t.strip()) for t in terms.split(",") if t.strip()
-        )
+        for t in terms.split(","):
+            key = t.strip().lower()
+            if key in dietary_map:
+                categories_list.append(dietary_map[key])
+            else:
+                categories_list.append(quote_plus(key))
+
+    params = {
+        "categories": ",".join(categories_list) if categories_list else terms,
+        "limit": limit,
+        "is_free": True,
+        "radius": radius,
+        "location": location,
+        "start_date": start_date
+    }
 
     response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
 
     yelp_events = []
     for event in response.json().get("events", []):
+        # Optionally, filter events by dietary tags in the response
         yelp_events.append(
             {
                 "source": "yelp",                     
