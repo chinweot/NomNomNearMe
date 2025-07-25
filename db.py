@@ -37,19 +37,19 @@ def init_auth_db():
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-def register_user(name, email, password):
+def register_user(name, email, password, phone):
     hashed_pw = hash_password(password)
     
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     if '@' not in email:
-        return {"status": "fail", "message": "Unvalid email address"}
+        return {"status": "fail", "message": "Invalid email address"}
 
     try:
         cursor.execute("""
-            INSERT INTO users (name, email, password)
-            VALUES (?, ?, ?)
-        """, (name, email, hashed_pw))
+            INSERT INTO users (name, email, password, phone)
+            VALUES (?, ?, ?, ?)
+        """, (name, email, hashed_pw, phone))
         conn.commit()
         
         user_id = cursor.lastrowid

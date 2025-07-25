@@ -39,8 +39,7 @@
           {{ form.csrf_token }} {# IMPORTANT: CSRF token #}
 
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">{{ form.username.label }}</label>
-            {# Changed type from "email" to "text" and id/name to "username" #}
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
             {{ form.username(type="text", id="username", class="mt-1 block w-full rounded-md border border-gray-300 p-3 focus:border-orange-500 focus:ring-orange-500", placeholder="Username", required=True) }}
             {% if form.username.errors %}
               {% for error in form.username.errors %}

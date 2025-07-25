@@ -25,19 +25,23 @@ def signup():
         print(f"Error creating form: {e}")
         return f"Form creation error: {e}"
 
+    error_message = None  # Ensure this is always defined
+
     if form.validate_on_submit():
         username = form.username.data
         email = form.email.data 
         password = form.password.data 
+        phone = form.phone.data
 
-        result = register_user(username, email, password)
+        result = register_user(username, email, password, phone)
         if result['status'] == 'success':
             session['user_id'] = MOCK_USER_ID
             return redirect(url_for('home'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
-    
-    return render_template("signup.html", form=form)
+            error_message = result['message']  # Capture the error message
+
+    return render_template("signup.html", form=form, error_message=error_message)
 
 # --- LOGIN PAGE 
 
