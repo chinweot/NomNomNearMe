@@ -7,19 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 key_value = os.environ['YELP_KEY']
-url = "https://api.yelp.com/v3/events"
-
-headers = {"Authorization" : f"Bearer {key_value}", "accept" : "application/json"}
-
-# defining query parameters 
-location = "Washington, DC"
-radius = 100
-categories = ["free food", "free samples", "free food events"]
-limit = 5
-
-# Unix date
-start_date = "1746140230"
+url = "https://api.yelp.com/v3/businesses/search"
+headers = {"Authorization": f"Bearer {key_value}", "accept": "application/json"}
 
 def format_date(iso_str):
     
@@ -29,8 +20,8 @@ def format_date(iso_str):
     except:
         return "Invalid Date"
 
-def search_yelp_events(location, terms, yelp_api_key, limit, radius):
 
+def search_yelp_businesses(location, terms, yelp_api_key, limit, radius):
     # Map user dietary terms to Yelp categories
     dietary_map = {
         "vegan": "vegan",
@@ -59,31 +50,32 @@ def search_yelp_events(location, terms, yelp_api_key, limit, radius):
                 categories_list.append(quote_plus(key))
 
     params = {
-        "categories": ",".join(categories_list) if categories_list else terms,
+        "categories": ",".join(categories_list) if categories_list else None,
+        "term": terms,
         "limit": limit,
-        "is_free": True,
         "radius": radius,
-        "location": location,
-        "start_date": start_date
+        "location": location
     }
+    # Remove None values
+    params = {k: v for k, v in params.items() if v}
 
     response = requests.get(url, headers=headers, params=params)
     response.raise_for_status()
 
-    yelp_events = []
-    for event in response.json().get("events", []):
-        # Optionally, filter events by dietary tags in the response
-        yelp_events.append(
+    yelp_businesses = []
+    for business in response.json().get("businesses", []):
+        yelp_businesses.append(
             {
-                "source": "yelp",                     
-                "external_id": event["id"],            
-                "global_id": f"yelp_{event['id']}",
-                "title" : event["name"],
-                "location" : event["location"]["display_address"][0],
-                "date" : event["time_start"],
-                "tags" : event.get("category", []),
-                "url" : event["event_site_url"]
+                "source": "yelp",
+                "external_id": business["id"],
+                "global_id": f"yelp_{business['id']}",
+                "title": business["name"],
+                "location": ", ".join(business["location"]["display_address"]),
+                "rating": business.get("rating"),
+                "tags": [cat["title"] for cat in business.get("categories", [])],
+                "url": business["url"],
+                "price": business.get("price", "?")
             }
         )
 
-    return yelp_events
+    return yelp_businesses

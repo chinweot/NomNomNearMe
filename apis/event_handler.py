@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv 
-from apis.yelp import search_yelp_events
+from apis.yelp import search_yelp_businesses
 from apis.reddit_api import search_reddit_events
 
 # getting keys 
@@ -13,7 +13,7 @@ def search_all_events(location: str, terms: str = ""):
     all_events = []
 
     # ---- SEARCH YELP EVENTS ----
-    yelp_events = search_yelp_events(
+    yelp_events = search_yelp_businesses(
             location=location,
             terms=terms,
             yelp_api_key=YELP_API_KEY,
