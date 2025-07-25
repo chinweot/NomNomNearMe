@@ -23,8 +23,9 @@
                 <nav class="flex items-center space-x-6">
                     <a href="{{ url_for('home') }}" class="text-gray-600 hover:text-orange-500">Home</a>
                     <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
+                    <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
+                    <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">Post Free Event</a>
                     <span class="text-sm text-gray-600 hidden sm:inline">Welcome! </span>
-
                     <a href="/" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
                 </nav>
             </div>

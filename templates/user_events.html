@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Free Events Posted by Users</title>
+</head>
+<body>
+    <h1>Free Events Posted by Users</h1>
+    <a href="/post_event">Post a New Free Event</a>
+    <ul>
+        {% for event in events %}
+        <li>
+            <strong>{{ event.title }}</strong> - {{ event.location }}<br>
+            Time: {{ event.event_time }} ({{ event.timezone }})<br>
+            Posted: {{ event.created_at }}
+        </li>
+        {% else %}
+        <li>No events posted yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

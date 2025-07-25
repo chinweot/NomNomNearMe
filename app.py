@@ -2,13 +2,37 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from db import init_auth_db, register_user, login_user, save_event, get_saved_events, delete_saved_event
 from forms import RegistrationForm, LoginForm
 from apis.event_handler import search_all_events
+from apis.user_events import init_user_events_db, add_user_event, get_user_events
 import db
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Wnv1I6Tsd7'
 
+
 init_auth_db()
+init_user_events_db()
 MOCK_USER_ID = 1
+# ---------- AUTHENTICATION ----------
+
+# ---------- USER FREE EVENTS ----------
+
+@app.route("/post_event", methods=["GET", "POST"])
+def post_event():
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        location = request.form.get("location", "").strip()
+        event_time = request.form.get("event_time", "").strip()
+        timezone = request.form.get("timezone", "").strip()
+        if not (title and location and event_time and timezone):
+            return render_template("post_event.html", error="All fields are required.")
+        add_user_event(title, location, event_time, timezone)
+        return redirect(url_for("user_events"))
+    return render_template("post_event.html")
+
+@app.route("/user_events")
+def user_events():
+    events = get_user_events()
+    return render_template("user_events.html", events=events)
 
 # ---------- AUTHENTICATION ----------
 

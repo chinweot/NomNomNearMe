@@ -61,36 +61,8 @@ def search_reddit_events(location, terms, reddit_client_id, reddit_client_secret
         for post in reddit_subreddit_obj.search(keywords, sort="new", limit=20):
             title_lower = post.title.lower()
             is_free = "free" in title_lower
-            is_cheap = False
-            price_value = None
-            # Check for price under $10 in title
-            import re
-            price_matches = re.findall(r'\$([0-9]+(?:\.[0-9]{1,2})?)', post.title)
-            for price_str in price_matches:
-                try:
-                    price_val = float(price_str)
-                    if price_val < 10:
-                        is_cheap = True
-                        price_value = f"${price_val:g}"
-                        break
-                except Exception:
-                    continue
-            # Use Gemini to check for cheapness if not obvious
-            if not is_free and not is_cheap:
-                prompt = f"Is this event free or does it cost less than $10? Event: {post.title}. Reply 'yes' or 'no'."
-                gemini_response = genai_call(prompt)
-                if gemini_response.strip().lower().startswith('yes'):
-                    is_cheap = True
-                    price_value = '<$10'
-            # Only include if free or cheap
-            if is_free or is_cheap:
-                # Set price field
-                if is_free:
-                    event_price = 'Free'
-                elif price_value:
-                    event_price = price_value
-                else:
-                    event_price = '<$10'
+            if is_free:
+                event_price = 'Free'
                 # Use Gemini to check if the post matches dietary filters
                 if dietary_filters:
                     prompt = f"Does this event match these dietary preferences: {dietary_filters}? Event: {post.title}. Reply 'yes' or 'no'."

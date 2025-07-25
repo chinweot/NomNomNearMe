@@ -64,18 +64,21 @@ def search_yelp_businesses(location, terms, yelp_api_key, limit, radius):
 
     yelp_businesses = []
     for business in response.json().get("businesses", []):
-        yelp_businesses.append(
-            {
-                "source": "yelp",
-                "external_id": business["id"],
-                "global_id": f"yelp_{business['id']}",
-                "title": business["name"],
-                "location": ", ".join(business["location"]["display_address"]),
-                "rating": business.get("rating"),
-                "tags": [cat["title"] for cat in business.get("categories", [])],
-                "url": business["url"],
-                "price": business.get("price", "?")
-            }
-        )
+        price = business.get("price", "?")
+        # Only include businesses with price = '$' (under $10)
+        if price == "$":
+            yelp_businesses.append(
+                {
+                    "source": "yelp",
+                    "external_id": business["id"],
+                    "global_id": f"yelp_{business['id']}",
+                    "title": business["name"],
+                    "location": ", ".join(business["location"]["display_address"]),
+                    "rating": business.get("rating"),
+                    "tags": [cat["title"] for cat in business.get("categories", [])],
+                    "url": business["url"],
+                    "price": "Less than $10"
+                }
+            )
 
     return yelp_businesses
