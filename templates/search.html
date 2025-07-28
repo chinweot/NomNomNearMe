@@ -23,6 +23,7 @@
                 <nav class="flex items-center space-x-6">
                     <a href="{{ url_for('home') }}" class="text-gray-600 hover:text-orange-500">Home</a>
                     <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
+                    <a href="{{ url_for('for_you') }}" class="text-gray-600 hover:text-orange-500">For You</a>
                     <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
                     <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">Post Free Event</a>
                     <span class="text-sm text-gray-600 hidden sm:inline">Welcome! </span>
@@ -32,32 +33,79 @@
         </header>
 
         <main class="flex-grow container mx-auto px-4 py-8">
-            <h1 class="text-3xl font-bold text-center mb-8">Find Delicious Events Near You</h1>
+            <!-- Tab Navigation -->
+            <div class="flex justify-center mb-8">
+                <div class="bg-white rounded-lg p-1 shadow-md">
+                    <button id="foodTab" class="tab-btn active px-6 py-3 rounded-md font-semibold transition-all">
+                        Food
+                    </button>
+                    <button id="eventsTab" class="tab-btn px-6 py-3 rounded-md font-semibold transition-all">
+                        Events
+                    </button>
+                </div>
+            </div>
 
-            <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10">
-                <div class="p-6">
-                    <h2 class="text-xl font-semibold mb-4">Search Nearby Events</h2>
+            <!-- Dynamic Heading -->
+            <h1 id="pageHeading" class="text-3xl font-bold text-center mb-8">Find Delicious Food Near You</h1>
 
-                    <div class="space-y-4">
-                        <div class="flex items-center border rounded-lg p-3 bg-gray-50">
-                            <span class="text-xl mr-2">📍</span>
-                            <div class="flex-grow">
-                                <label class="block text-sm text-gray-600 mb-1">Location</label>
-                                <input type="text" id="location" placeholder="Enter address" class="w-full bg-transparent outline-none">
+            <!-- Food Search Section -->
+            <div id="foodSection" class="search-section">
+                <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold mb-4">Search Nearby Food</h2>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                                <span class="text-xl mr-2">📍</span>
+                                <div class="flex-grow">
+                                    <label class="block text-sm text-gray-600 mb-1">Location</label>
+                                    <input type="text" id="foodLocation" placeholder="Enter address" class="w-full bg-transparent outline-none">
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="flex items-center border rounded-lg p-3 bg-gray-50">
-                            <span class="text-xl mr-2">🔍</span>
-                            <div class="flex-grow">
-                                <label class="block text-sm text-gray-600 mb-1">Interests</label>
-                                <input type="text" id="interests" placeholder="free food, community, people" class="w-full bg-transparent outline-none">
+                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                                <span class="text-xl mr-2">🔍</span>
+                                <div class="flex-grow">
+                                    <label class="block text-sm text-gray-600 mb-1">Food Preferences</label>
+                                    <input type="text" id="foodInterests" placeholder="pizza, burgers, cheap food" class="w-full bg-transparent outline-none">
+                                </div>
                             </div>
-                        </div>
 
-                        <button id="searchButton" class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
-                            Search Events
-                        </button>
+                            <button id="foodSearchButton" class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
+                                Search Food
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Events Search Section -->
+            <div id="eventsSection" class="search-section hidden">
+                <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10">
+                    <div class="p-6">
+                        <h2 class="text-xl font-semibold mb-4">Search Free Events</h2>
+
+                        <div class="space-y-4">
+                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                                <span class="text-xl mr-2">📍</span>
+                                <div class="flex-grow">
+                                    <label class="block text-sm text-gray-600 mb-1">Location</label>
+                                    <input type="text" id="eventsLocation" placeholder="Enter address" class="w-full bg-transparent outline-none">
+                                </div>
+                            </div>
+
+                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                                <span class="text-xl mr-2">🔍</span>
+                                <div class="flex-grow">
+                                    <label class="block text-sm text-gray-600 mb-1">Event Type</label>
+                                    <input type="text" id="eventsInterests" placeholder="free food, community, people" class="w-full bg-transparent outline-none">
+                                </div>
+                            </div>
+
+                            <button id="eventsSearchButton" class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
+                                Search Events
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
