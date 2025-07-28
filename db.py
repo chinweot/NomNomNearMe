@@ -27,6 +27,7 @@ def init_auth_db():
             event_date TEXT,
             event_location TEXT,
             event_url TEXT,
+            type TEXT NOT NULL,
             rating TEXT CHECK(rating IN ('positive', 'neutral', 'negative')) DEFAULT 'neutral',
             saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, event_global_id),
@@ -95,16 +96,21 @@ def save_event(user_id, event_data):
     date = event_data.get('date')
     location = event_data.get('location')
     url = event_data.get('url')
-    rating = event_data.get('rating', 'neutral')
+    
+    event_type = event_data.get('type')  # "food" or "social"
 
+    rating = event_data.get('rating', 'neutral')
     if rating not in ['positive', 'neutral', 'negative']:
         rating = 'neutral'
 
     try:
         cursor.execute("""
-            INSERT INTO saved_events (user_id, event_global_id, event_source, event_title, event_date, event_location, event_url, rating)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, global_id, source, title, date, location, url, rating)) 
+            INSERT INTO saved_events (
+                user_id, event_global_id, event_source, event_title,
+                event_date, event_location, event_url, type, rating
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, global_id, source, title, date, location, url, event_type, rating))
+        
         conn.commit()
         result = {"status": "success", "message": "Event saved successfully."}
     except sqlite3.IntegrityError:
@@ -113,13 +119,14 @@ def save_event(user_id, event_data):
         result = {"status": "fail", "message": f"Error saving event: {e}"}
     finally:
         conn.close()
+    
     return result
 
 def get_saved_events(user_id: int) -> list:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT event_global_id, event_source, event_title, event_date, event_location, event_url, rating
+        SELECT event_global_id, event_source, event_title, event_date, event_location, event_url, type, rating
         FROM saved_events
         WHERE user_id = ?
         ORDER BY saved_at DESC
@@ -137,7 +144,8 @@ def get_saved_events(user_id: int) -> list:
             "date": row[3], 
             "location": row[4], 
             "url": row[5],
-            "rating": row[6]
+            "type": row[6],
+            "rating": row[7]
         })
     return saved_events_list
 
