@@ -97,6 +97,12 @@ def search():
         session['user_id'] = MOCK_USER_ID # TEMPORARY
     return render_template("search.html")
 
+@app.route("/for_you")
+def for_you():
+    if 'user_id' not in session:
+        session['user_id'] = MOCK_USER_ID # TEMPORARY
+    return render_template("for_you.html")
+
 @app.route('/about')
 def about():
     return render_template('about.html')

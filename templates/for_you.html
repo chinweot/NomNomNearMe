@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>For You - Nom Nom Near Me</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href= "../static/css/globals.css">
+    
+</head>
+
+<body class="bg-gray-100 font-poppins">
+    <div class="min-h-screen flex flex-col">
+        <header class="bg-white shadow-md py-4">
+            <div class="container mx-auto px-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="App Logo" class="w-8 h-8 object-contain" />
+                    <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
+                    <a href="{{ url_for('for_you') }}" class="text-gray-600 hover:text-orange-500">For You</a>
+                    <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
+                    <a href="{{ url_for('search') }}" class="text-gray-600 hover:text-orange-500">Home</a>
+                    <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
+                    <a href= "{{ url_for('home') }}" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="flex-grow flex items-center justify-center">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-600 mb-4">Feed Will be Here</h1>
+                <p class="text-gray-500">Personalized recommendations</p>
+            </div>
+        </main>
+
+        <footer class="bg-gray-800 text-white py-6">
+            <div class="container mx-auto px-4 text-center">
+                <p>© 2025 Nom Nom Near Me - Find the best food events around you</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html> 

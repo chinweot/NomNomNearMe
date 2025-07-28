@@ -12,7 +12,8 @@ def init_auth_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            phone TEXT
         )
     """)
 
@@ -64,15 +65,15 @@ def register_user(name, email, password, phone):
     conn.close()
     return result
 
-def login_user(email, password):
+def login_user(username, password):
     hashed = hash_password(password)
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id FROM users
-        WHERE email = ? AND password = ?
-    """, (email, hashed))
+        WHERE name = ? AND password = ?
+    """, (username, hashed))
     result = cursor.fetchone()
     conn.close()
 

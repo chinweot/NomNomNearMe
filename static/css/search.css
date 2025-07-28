@@ -11,3 +11,29 @@ body {
   transform: translateY(-3px);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
+
+/* Tab button styles */
+.tab-btn {
+  transition: all 0.3s ease;
+  color: #6b7280; /* gray-500 */
+}
+
+.tab-btn:hover {
+  color: #f97316; /* orange-500 */
+  transform: translateY(-1px);
+}
+
+.tab-btn.active {
+  background-color: #f97316; /* orange-500 */
+  color: white;
+  box-shadow: 0 4px 6px rgba(249, 115, 22, 0.3);
+}
+
+/* Search section transitions */
+.search-section {
+  transition: opacity 0.3s ease;
+}
+
+.search-section.hidden {
+  display: none;
+}

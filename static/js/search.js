@@ -1,7 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const searchButton = document.getElementById("searchButton");
-  const locationInput = document.getElementById("location");
-  const interestsInput = document.getElementById("interests");
+  // Tab elements
+  const foodTab = document.getElementById("foodTab");
+  const eventsTab = document.getElementById("eventsTab");
+  const foodSection = document.getElementById("foodSection");
+  const eventsSection = document.getElementById("eventsSection");
+  const pageHeading = document.getElementById("pageHeading");
+
+  // Food search elements
+  const foodSearchButton = document.getElementById("foodSearchButton");
+  const foodLocationInput = document.getElementById("foodLocation");
+  const foodInterestsInput = document.getElementById("foodInterests");
+
+  // Events search elements
+  const eventsSearchButton = document.getElementById("eventsSearchButton");
+  const eventsLocationInput = document.getElementById("eventsLocation");
+  const eventsInterestsInput = document.getElementById("eventsInterests");
+
+  // Results elements
   const resultsContainer = document.getElementById("resultsContainer");
   const results = document.getElementById("results");
 
@@ -13,6 +28,33 @@ document.addEventListener("DOMContentLoaded", () => {
   notification.className =
     "fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300";
   document.body.appendChild(notification);
+
+  // Tab switching functionality
+  function switchTab(tabName) {
+    // Update tab buttons
+    foodTab.classList.remove("active", "bg-orange-500", "text-white");
+    eventsTab.classList.remove("active", "bg-orange-500", "text-white");
+    
+    if (tabName === "food") {
+      foodTab.classList.add("active", "bg-orange-500", "text-white");
+      foodSection.classList.remove("hidden");
+      eventsSection.classList.add("hidden");
+      pageHeading.textContent = "Find Delicious Food Near You";
+    } else {
+      eventsTab.classList.add("active", "bg-orange-500", "text-white");
+      eventsSection.classList.remove("hidden");
+      foodSection.classList.add("hidden");
+      pageHeading.textContent = "Find Free Events Near You";
+    }
+
+    // Clear results when switching tabs
+    resultsContainer.classList.add("hidden");
+    results.innerHTML = "";
+  }
+
+  // Tab event listeners
+  foodTab.addEventListener("click", () => switchTab("food"));
+  eventsTab.addEventListener("click", () => switchTab("events"));
 
   function showNotification(message, type = "success") {
     notification.textContent = message;
@@ -277,9 +319,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Event Listeners and Initial Load ---
 
-  searchButton.addEventListener("click", async () => {
-    const location = locationInput.value.trim();
-    const interests = interestsInput.value.trim();
+  // Food search event listener
+  foodSearchButton.addEventListener("click", async () => {
+    const location = foodLocationInput.value.trim();
+    const interests = foodInterestsInput.value.trim();
+
+    if (!location) {
+      showNotification(
+        "Please enter a location to search for food.",
+        "error"
+      );
+      return;
+    }
+
+    const savedEventsForUser = await fetchSavedEvents();
+    const searchResults = await fetchEvents(location, interests);
+    renderEvents(searchResults, savedEventsForUser);
+  });
+
+  // Events search event listener
+  eventsSearchButton.addEventListener("click", async () => {
+    const location = eventsLocationInput.value.trim();
+    const interests = eventsInterestsInput.value.trim();
 
     if (!location) {
       showNotification(
@@ -294,5 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderEvents(searchResults, savedEventsForUser);
   });
 
+  // Initialize the page with food tab active
+  switchTab("food");
   renderSavedEvents();
 });
