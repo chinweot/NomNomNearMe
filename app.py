@@ -170,6 +170,36 @@ def api_events():
     except Exception as e:
         print(f"Error in api_events: {e}")
         return jsonify({"error" : str(e)}), 502
+    
+#------------- USERS PREFERENCES AND LOCATION ----------
+@app.route("/complete_profile", methods=["GET", "POST"])
+def complete_profile():
+    if 'user_id' not in session:
+        return redirect(url_for("signup"))
+
+    if request.method == "POST":
+        location = request.form.get("location").strip()
+        preferences = request.form.getlist("preferences")  # expects checkboxes
+        db.save_user_preferences(session['user_id'], location, preferences)
+        return redirect(url_for("for_you"))
+
+    return render_template("complete_profile.html")
+
+@app.route("/for_you")
+def for_you():
+    if 'user_id' not in session:
+        return redirect(url_for("home"))
+
+    prefs = db.get_user_preferences(session['user_id'])
+    events = []
+    if prefs:
+        location = prefs["location"]
+        term = " ".join(prefs["preferences"])
+        events = search_all_events(location, term)
+        return render_template("for_you.html", events=events, preferences=prefs)
+    else:
+        return redirect(url_for("complete_profile"))
+
         
 
 if __name__ == "__main__":
