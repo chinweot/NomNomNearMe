@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
 from flask import session 
+import json
 
 DB_PATH = "user_info.db"
 
@@ -32,6 +33,16 @@ def init_auth_db():
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_preferences (
+            user_id INTEGER PRIMARY KEY,
+            location TEXT,
+            preferences TEXT, -- JSON string (list of categories)
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -154,6 +165,30 @@ def delete_saved_event(user_id: int, event_global_id: str) -> dict:
     finally:
         conn.close()
     return result
+
+def save_user_preferences(user_id, location, preferences):
+    preferences_json = json.dumps(preferences)
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO user_preferences (user_id, location, preferences)
+        VALUES (?, ?, ?)
+        ON CONFLICT(user_id)
+        DO UPDATE SET location=excluded.location, preferences=excluded.preferences
+    """, (user_id, location, preferences_json))
+    conn.commit()
+    conn.close()
+
+def get_user_preferences(user_id):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT location, preferences FROM user_preferences WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return {"location": row[0], "preferences": json.loads(row[1])}
+    return None
+
     
 if __name__ == "__main__":
     init_auth_db()
