@@ -55,20 +55,40 @@ def search_reddit_events(location, terms, reddit_client_id, reddit_client_secret
     keywords = "free food OR pizza OR snacks OR lunch OR bbq OR dinner OR admission OR parking"
     posts = []
 
-    try: 
+    dietary_filters = terms if terms else ""
+
+    try:
         for post in reddit_subreddit_obj.search(keywords, sort="new", limit=20):
-            if "free" in post.title.lower():
-                #readable_time = datetime.utcfromtimestamp(post.created_utc).strftime('%A, %B %d %Y at %I:%M %p UTC')
-                posts.append({
-                    "source" : "reddit",
-                    "external_id": post.id,
-                    "global_id": f"reddit_{post.id}",
-                    "title": post.title.strip(),
-                    "time": "TBD", #readable_time
-                    "url": f"https://reddit.com{post.permalink}",
-                    "location": subreddit_name
-                })
+            title_lower = post.title.lower()
+            is_free = "free" in title_lower
+            if is_free:
+                event_price = 'Free'
+                # Use Gemini to check if the post matches dietary filters
+                if dietary_filters:
+                    prompt = f"Does this event match these dietary preferences: {dietary_filters}? Event: {post.title}. Reply 'yes' or 'no'."
+                    gemini_response = genai_call(prompt)
+                    if gemini_response.strip().lower().startswith('yes'):
+                        posts.append({
+                            "source" : "reddit",
+                            "external_id": post.id,
+                            "global_id": f"reddit_{post.id}",
+                            "title": post.title.strip(),
+                            "time": "TBD",
+                            "url": f"https://reddit.com{post.permalink}",
+                            "location": subreddit_name,
+                            "price": event_price
+                        })
+                else:
+                    posts.append({
+                        "source" : "reddit",
+                        "external_id": post.id,
+                        "global_id": f"reddit_{post.id}",
+                        "title": post.title.strip(),
+                        "time": "TBD",
+                        "url": f"https://reddit.com{post.permalink}",
+                        "location": subreddit_name,
+                        "price": event_price
+                    })
     except Exception as e:
         print(f"Error searching Reddit for events in {subreddit_name}: {e}")
     return posts
-

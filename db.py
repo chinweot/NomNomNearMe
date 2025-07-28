@@ -12,7 +12,8 @@ def init_auth_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            phone TEXT
         )
     """)
 
@@ -27,6 +28,7 @@ def init_auth_db():
             event_location TEXT,
             event_url TEXT,
             type TEXT NOT NULL,
+            rating TEXT CHECK(rating IN ('positive', 'neutral', 'negative')) DEFAULT 'neutral',
             saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, event_global_id),
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
@@ -38,19 +40,19 @@ def init_auth_db():
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-def register_user(name, email, password):
+def register_user(name, email, password, phone):
     hashed_pw = hash_password(password)
     
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     if '@' not in email:
-        return {"status": "fail", "message": "Unvalid email address"}
+        return {"status": "fail", "message": "Invalid email address"}
 
     try:
         cursor.execute("""
-            INSERT INTO users (name, email, password)
-            VALUES (?, ?, ?)
-        """, (name, email, hashed_pw))
+            INSERT INTO users (name, email, password, phone)
+            VALUES (?, ?, ?, ?)
+        """, (name, email, hashed_pw, phone))
         conn.commit()
         
         user_id = cursor.lastrowid
@@ -65,15 +67,15 @@ def register_user(name, email, password):
     conn.close()
     return result
 
-def login_user(email, password):
+def login_user(username, password):
     hashed = hash_password(password)
 
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
         SELECT id FROM users
-        WHERE email = ? AND password = ?
-    """, (email, hashed))
+        WHERE name = ? AND password = ?
+    """, (username, hashed))
     result = cursor.fetchone()
     conn.close()
 
@@ -94,13 +96,21 @@ def save_event(user_id, event_data):
     date = event_data.get('date')
     location = event_data.get('location')
     url = event_data.get('url')
+    
     event_type = event_data.get('type')  # "food" or "social"
+
+    rating = event_data.get('rating', 'neutral')
+    if rating not in ['positive', 'neutral', 'negative']:
+        rating = 'neutral'
 
     try:
         cursor.execute("""
-            INSERT INTO saved_events (user_id, event_global_id, event_source, event_title, event_date, event_location, event_url, type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, global_id, source, title, date, location, url, event_type)) 
+            INSERT INTO saved_events (
+                user_id, event_global_id, event_source, event_title,
+                event_date, event_location, event_url, type, rating
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, global_id, source, title, date, location, url, event_type, rating))
+        
         conn.commit()
         result = {"status": "success", "message": "Event saved successfully."}
     except sqlite3.IntegrityError:
@@ -109,13 +119,14 @@ def save_event(user_id, event_data):
         result = {"status": "fail", "message": f"Error saving event: {e}"}
     finally:
         conn.close()
+    
     return result
 
 def get_saved_events(user_id: int) -> list:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT event_global_id, event_source, event_title, event_date, event_location, event_url, type
+        SELECT event_global_id, event_source, event_title, event_date, event_location, event_url, type, rating
         FROM saved_events
         WHERE user_id = ?
         ORDER BY saved_at DESC
@@ -133,7 +144,8 @@ def get_saved_events(user_id: int) -> list:
             "date": row[3], 
             "location": row[4], 
             "url": row[5],
-            "type": row[6]
+            "type": row[6],
+            "rating": row[7]
         })
     return saved_events_list
 

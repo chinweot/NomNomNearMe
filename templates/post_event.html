@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post Event - Nom Nom Near Me</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Poppins Font -->
+  <link rel="stylesheet" href= "../static/css/globals.css">
+ 
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href= "../static/css/post_events.css">
+
+</head>
+
+<body class="bg-gray-100">
+  <!-- Header -->
+  <header class="bg-white shadow-md py-4">
+    <div class="container mx-auto px-4 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <img src="../static/img/logo.png" alt="App Logo" class="w-8 h-8 object-contain" />
+        <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+      </div>
+      <nav class="flex items-center space-x-6">
+        <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
+        <a href="{{ url_for('for_you') }}" class="text-gray-600 hover:text-orange-500">For You</a>
+        <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
+        <a href="{{ url_for('search') }}" class="text-gray-600 hover:text-orange-500">Home</a>
+        <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
+        <a href= "{{ url_for('home') }}" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="bg-orange-500 text-white py-10">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl font-bold">Post a Free Event</h1>
+      <p class="text-white text-opacity-90 mt-2">Share your food event with the community</p>
+    </div>
+  </section>
+
+  <!-- Main Form Section -->
+  <main class="py-12">
+    <div class="container mx-auto px-4">
+      <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm">
+
+        <form method="POST" action="/post_event" class="space-y-6">
+          <div>
+            <label for="title" class="block text-gray-700 font-medium mb-1">Event Name</label>
+            <input type="text" id="title" name="title" required
+              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
+              placeholder="e.g. Pizza Night at Tech Club">
+          </div>
+
+          <div>
+            <label for="location" class="block text-gray-700 font-medium mb-1">Location</label>
+            <input type="text" id="location" name="location" required
+              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
+              placeholder="e.g. Engineering Building, Room 101">
+          </div>
+
+          <div>
+            <label for="event_time" class="block text-gray-700 font-medium mb-1">Event Time</label>
+            <input type="datetime-local" id="event_time" name="event_time" required
+              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none">
+          </div>
+
+          <div>
+            <label for="timezone" class="block text-gray-700 font-medium mb-1">Timezone</label>
+            <input type="text" id="timezone" name="timezone" required
+              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
+              placeholder="e.g. America/New_York">
+          </div>
+
+          <div>
+            <label for="description" class="block text-gray-700 font-medium mb-1">Event Description</label>
+            <textarea id="description" name="description" rows="4"
+              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
+              placeholder="Describe your event..."></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-4">
+            <button type="submit"
+              class="submit-button w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition-all duration-200">
+              Post Event
+            </button>
+          </div>
+        </form>
+
+        <p class="mt-6 text-center text-sm text-gray-500">
+          Note: All events posted will be reviewed
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-6 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p>© 2025 Nom Nom Near Me - Find free social events near you</p>
+    </div>
+  </footer>
+
+ <script src="{{ url_for('static', filename='js/post_event.js') }}"></script>
+</body>
+</html>
