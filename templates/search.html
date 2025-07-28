@@ -7,29 +7,30 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+    <link rel="stylesheet" href= "../static/css/globals.css">
+    <link rel="stylesheet" href= "../static/css/search.css">
 </head>
-
 <body class="bg-gray-100 font-poppins">
     <div class="min-h-screen flex flex-col">
+
+        <!-- Header -->
         <header class="bg-white shadow-md py-4">
             <div class="container mx-auto px-4 flex items-center justify-between">
                 <div class="flex items-center space-x-2">
-                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="App Logo" class="w-8 h-8 object-contain" />
+                    <img src="../static/img/logo.png" alt="Logo" class="w-8 h-8 object-contain" />
                     <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
                 </div>
                 <nav class="flex items-center space-x-6">
-                    <a href="{{ url_for('home') }}" class="text-gray-600 hover:text-orange-500">Home</a>
-                    <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
+                    <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
                     <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
-                    <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition">Post Free Event</a>
-                    <span class="text-sm text-gray-600 hidden sm:inline">Welcome! </span>
-                    <a href="/" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
+                    <a href="{{ url_for('search') }}" class="text-gray-600 hover:text-orange-500">Home</a>
+                    <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
+                    <a href= "{{ url_for('home') }}" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
                 </nav>
             </div>
         </header>
+
+         <!-- Main Content Search Bar -->
 
         <main class="flex-grow container mx-auto px-4 py-8">
             <h1 class="text-3xl font-bold text-center mb-8">Find Delicious Events Near You</h1>
@@ -62,6 +63,8 @@
                 </div>
             </div>
 
+            <!-- Results & Saved Events -->
+
             <div id="resultsContainer" class="max-w-3xl mx-auto hidden">
                 <h2 class="text-xl font-semibold mb-4">Results:</h2>
                 <div id="results" class="space-y-4"></div>
@@ -73,6 +76,8 @@
             </div>
 
         </main>
+
+        <!-- Footer -->
 
         <footer class="bg-gray-800 text-white py-6">
             <div class="container mx-auto px-4 text-center">

@@ -8,10 +8,9 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/globals.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
   </head>
 
   <body class="bg-gray-100 font-poppins min-h-screen flex items-center justify-center">
@@ -19,7 +18,7 @@
 
       <section class="md:w-1/2 p-10 flex flex-col justify-center items-center">
         <img
-          src="{{ url_for('static', filename='img/logo.png')}}"
+          src="{{ url_for('static', filename='img/logo.png') }}"
           alt="Nom Nom Near Me logo"
           class="mb-8 w-20 h-20 object-contain"
         />
@@ -39,8 +38,8 @@
           {{ form.csrf_token }} {# IMPORTANT: CSRF token #}
 
           <div>
-            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-            {{ form.username(type="text", id="username", class="mt-1 block w-full rounded-md border border-gray-300 p-3 focus:border-orange-500 focus:ring-orange-500", placeholder="Username", required=True) }}
+            <label for="username" class="block text-sm font-medium text-gray-700">Email</label>
+            {{ form.username(type="text", id="username", class="mt-1 block w-full rounded-md border border-gray-300 p-3 focus:border-orange-500 focus:ring-orange-500", placeholder="Email", required=True) }}
             {% if form.username.errors %}
               {% for error in form.username.errors %}
                 <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -75,7 +74,7 @@
 
       <section class="md:w-1/2 hidden md:block">
         <img
-          src="{{ url_for('static', filename='img/loginpeoplephoto.jpeg')}}"
+          src="../static/img/loginpeoplephoto.jpeg"
           alt="People enjoying food"
           class="object-cover w-full h-full"
         />
