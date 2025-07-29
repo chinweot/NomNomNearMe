@@ -464,6 +464,23 @@ def api_like_event():
     result = db.like_event(user_id, event_global_id, tags)
     return jsonify(result)
 
+@app.route('/api/liked_events', methods=['GET'])
+def api_liked_events():
+    if 'user_id' not in session:
+        return jsonify({'status': 'fail', 'message': 'User not logged in.'}), 401
+
+    user_id = session['user_id']
+    liked_events = db.get_liked_events(user_id)
+    return jsonify({'status': 'success', 'events': liked_events}), 200
+
+@app.route('/api/posted_events', methods=['GET'])
+def api_posted_events():
+    if 'user_id' not in session:
+        return jsonify({'status': 'fail', 'message': 'User not logged in.'}), 401
+
+    user_id = session['user_id']
+    posted_events = db.get_events_posted_by_user(user_id)
+    return jsonify({'status': 'success', 'events': posted_events}), 200
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -269,6 +269,61 @@ def like_event(user_id, event_global_id, tags):
     conn.close()
     return result
 
+def get_liked_events(user_id: int) -> list:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT se.event_global_id, se.event_source, se.event_title, se.event_date, 
+               se.event_location, se.event_url, se.type
+        FROM liked_events le
+        JOIN saved_events se ON le.event_global_id = se.event_global_id
+        WHERE le.user_id = ?
+        ORDER BY le.liked_at DESC
+    """, (user_id,))
+    
+    liked_events_raw = cursor.fetchall()
+    conn.close()
+
+    liked_events = []
+    for row in liked_events_raw:
+        liked_events.append({
+            "global_id": row[0],
+            "source": row[1],
+            "title": row[2],
+            "date": row[3],
+            "location": row[4],
+            "url": row[5],
+            "type": row[6]
+        })
+    
+    return liked_events
+
+def get_events_posted_by_user(user_id: int) -> list:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, title, location, event_time, timezone
+        FROM user_events
+        WHERE user_id = ?
+        ORDER BY event_time DESC
+    """, (user_id,))
+    
+    posted_events_raw = cursor.fetchall()
+    conn.close()
+
+    posted_events = []
+    for row in posted_events_raw:
+        posted_events.append({
+            "id": row[0],
+            "title": row[1],
+            "location": row[2],
+            "event_time": row[3],
+            "timezone": row[4]
+        })
+    
+    return posted_events
 
 if __name__ == "__main__":
     init_auth_db()
