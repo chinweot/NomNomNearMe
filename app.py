@@ -326,7 +326,53 @@ def for_you():
         ge['address'] = ', '.join(ge.get('address', [])) if isinstance(ge.get('address', ''), list) else ge.get('address', '')
         ge['description'] = desc
         ge['link'] = ge.get('link', ge.get('event_url', ''))
-        ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
+        
+        # Try to get the best quality image available with multiple fallbacks
+        image = None
+        
+        # Try multiple image fields in order of preference
+        for img_field in ['image', 'photo', 'picture', 'thumbnail', 'banner']:
+            if ge.get(img_field):
+                image = ge.get(img_field)
+                break
+        
+        if image:
+            # Try to get higher resolution version if it's a Google image
+            if 'googleusercontent.com' in str(image):
+                # Try multiple resolution attempts
+                original_image = str(image)
+                # First attempt: very high resolution
+                image = original_image.replace('=w120-h120-p', '=w2000-h1200-p')
+                image = image.replace('=s120', '=s2000')
+                image = image.replace('=w120', '=w2000')
+                image = image.replace('=h120', '=h1200')
+                image = image.replace('=w120-h120', '=w2000-h1200')
+                image = image.replace('=s120-c', '=s2000-c')
+                # Remove any remaining size restrictions
+                image = image.replace('=w120', '=w2000')
+                image = image.replace('=h120', '=h1200')
+                image = image.replace('=s120', '=s2000')
+            elif 'lh3.googleusercontent.com' in str(image):
+                # For Google Photos, try to get original size
+                image = str(image).replace('=s120', '=s0')
+                image = str(image).replace('=w120', '=w0')
+                image = str(image).replace('=h120', '=h0')
+            elif 'maps.googleapis.com' in str(image):
+                # For Google Maps images, try to get higher resolution
+                image = str(image).replace('size=120x120', 'size=1200x800')
+                image = str(image).replace('zoom=15', 'zoom=18')
+            
+            ge['image'] = image
+        else:
+            # If no image found, try to generate a placeholder based on event type
+            if 'music' in tag.lower() or 'concert' in title.lower():
+                ge['image'] = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=800&fit=crop&q=90'
+            elif 'food' in tag.lower() or 'restaurant' in title.lower():
+                ge['image'] = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
+            elif 'sport' in tag.lower() or 'fitness' in title.lower():
+                ge['image'] = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop&q=90'
+            else:
+                ge['image'] = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
 
     # Combine all events (only user events in user's city)
     all_events = filtered_user_events + google_events
