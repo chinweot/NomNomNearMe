@@ -59,8 +59,8 @@ def signup():
 
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
-            session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('home'))
+            session['user_id'] = MOCK_USER_ID #use real user id?
+            return redirect(url_for('complete_profile'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
             error_message = result['message']  # Capture the error message
@@ -97,11 +97,11 @@ def search():
         session['user_id'] = MOCK_USER_ID # TEMPORARY
     return render_template("search.html")
 
-@app.route("/for_you")
-def for_you():
-    if 'user_id' not in session:
-        session['user_id'] = MOCK_USER_ID # TEMPORARY
-    return render_template("for_you.html")
+#@app.route("/for_you")
+#def for_you():
+#    if 'user_id' not in session:
+#        session['user_id'] = MOCK_USER_ID # TEMPORARY
+#    return render_template("for_you.html")
 
 @app.route('/about')
 def about():
@@ -148,7 +148,7 @@ def api_saved_events():
     user_id = MOCK_USER_ID
     if not user_id:
         return jsonify({'message': 'User not logged in'}), 401
-    saved_events = db.get_saved_events(user_id) # Assuming db.get_saved_events exists
+    saved_events = db.get_saved_events(user_id) 
     return jsonify({'events': saved_events})
 
 # ---------- FETCH API DATA ----------
@@ -191,14 +191,88 @@ def for_you():
         return redirect(url_for("home"))
 
     prefs = db.get_user_preferences(session['user_id'])
-    events = []
-    if prefs:
-        location = prefs["location"]
-        term = " ".join(prefs["preferences"])
-        events = search_all_events(location, term)
-        return render_template("for_you.html", events=events, preferences=prefs)
-    else:
+    if not prefs:
         return redirect(url_for("complete_profile"))
+
+    location = prefs["location"]
+    user_prefs = prefs["preferences"]  # dict: {"music":5, "sports":3, ...}
+
+    # -------- Fetch and tag user events --------
+    user_events = get_user_events()
+    for ue in user_events:
+        title = ue.get('title', '')
+        desc = ''
+        tag = gemini_tag(title, desc)
+        ue['tag'] = tag
+        ue['source'] = 'user'
+        ue['title'] = title
+        ue['date'] = ue.get('event_time', '')
+        ue['description'] = desc
+        ue['address'] = ue.get('location', '')
+        ue['link'] = ''
+        ue['image'] = '/static/img/logo.png'
+
+    # -------- Fetch and tag Google events --------
+    try:
+        google_events = get_google_events(location)
+    except Exception as e:
+        print(f"Error fetching Google events: {e}")
+        google_events = []
+
+    for ge in google_events:
+        title = ge.get('title', '')
+        desc = ge.get('description', '')
+        tag = gemini_tag(title, desc)
+        ge['tag'] = tag
+        ge['source'] = 'google'
+
+        date_val = ge.get('date', '')
+        ge['date'] = date_val.get('when') if isinstance(date_val, dict) else str(date_val)
+        ge['address'] = ', '.join(ge.get('address', [])) if isinstance(ge.get('address', ''), list) else ge.get('address', '')
+        ge['description'] = desc
+        ge['link'] = ge.get('link', ge.get('event_url', ''))
+        ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
+
+    # -------- Combine all events --------
+    all_events = user_events + google_events
+
+    # -------- Score events based on user prefs --------
+    def score_event(event):
+        score = 0
+        tags = event.get('tag', '').split(",")  # assuming gemini_tag returns comma-separated tags
+        for tag in tags:
+            tag = tag.strip().lower()
+            score += user_prefs.get(tag, 0)
+        return score
+
+    # Separate food vs social for fairness
+    food_events = [e for e in all_events if e.get('type') == 'food']
+    social_events = [e for e in all_events if e.get('type') == 'social']
+
+    def pick_events(events):
+        # Sort by score descending
+        events.sort(key=score_event, reverse=True)
+        # 70% top matches, 30% random variety
+        top_count = max(1, int(len(events) * 0.7))
+        top_events = events[:top_count]
+        random_events = events[top_count:]
+        return top_events + random.sample(random_events, min(len(random_events), len(events) - top_count))
+
+    # Merge balanced sets
+    import random
+    final_events = []
+    max_len = max(len(food_events), len(social_events))
+
+    for i in range(max_len):
+        if i < len(food_events):
+            final_events.append(food_events[i])
+        if i < len(social_events):
+            final_events.append(social_events[i])
+
+    # Apply diversity picking on combined list
+    final_events = pick_events(final_events)
+
+    return render_template("for_you.html", events=final_events, preferences=prefs)
 
         
 

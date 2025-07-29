@@ -29,7 +29,6 @@ def init_auth_db():
             event_location TEXT,
             event_url TEXT,
             type TEXT NOT NULL,
-            rating TEXT CHECK(rating IN ('positive', 'neutral', 'negative')) DEFAULT 'neutral',
             saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, event_global_id),
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
@@ -40,7 +39,7 @@ def init_auth_db():
         CREATE TABLE IF NOT EXISTS user_preferences (
             user_id INTEGER PRIMARY KEY,
             location TEXT,
-            preferences TEXT, -- JSON string (list of categories)
+            preferences TEXT, -- JSON string (dict: category -> weight)
             FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
     """)
@@ -107,20 +106,15 @@ def save_event(user_id, event_data):
     date = event_data.get('date')
     location = event_data.get('location')
     url = event_data.get('url')
-    
     event_type = event_data.get('type')  # "food" or "social"
-
-    rating = event_data.get('rating', 'neutral')
-    if rating not in ['positive', 'neutral', 'negative']:
-        rating = 'neutral'
 
     try:
         cursor.execute("""
             INSERT INTO saved_events (
                 user_id, event_global_id, event_source, event_title,
-                event_date, event_location, event_url, type, rating
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (user_id, global_id, source, title, date, location, url, event_type, rating))
+                event_date, event_location, event_url, type
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (user_id, global_id, source, title, date, location, url, event_type))
         
         conn.commit()
         result = {"status": "success", "message": "Event saved successfully."}
@@ -137,7 +131,7 @@ def get_saved_events(user_id: int) -> list:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT event_global_id, event_source, event_title, event_date, event_location, event_url, type, rating
+        SELECT event_global_id, event_source, event_title, event_date, event_location, event_url, type
         FROM saved_events
         WHERE user_id = ?
         ORDER BY saved_at DESC
@@ -155,8 +149,7 @@ def get_saved_events(user_id: int) -> list:
             "date": row[3], 
             "location": row[4], 
             "url": row[5],
-            "type": row[6],
-            "rating": row[7]
+            "type": row[6]
         })
     return saved_events_list
 
@@ -181,6 +174,10 @@ def delete_saved_event(user_id: int, event_global_id: str) -> dict:
     return result
 
 def save_user_preferences(user_id, location, preferences):
+    # if prefs is a list, init weights to 1
+    if isinstance(preferences, list):
+        preferences = {pref: 1 for pref in preferences}
+
     preferences_json = json.dumps(preferences)
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
@@ -203,6 +200,34 @@ def get_user_preferences(user_id):
         return {"location": row[0], "preferences": json.loads(row[1])}
     return None
 
-    
+def like_event(user_id, event_global_id, tags):
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT preferences FROM user_preferences WHERE user_id = ?", (user_id,))
+    row = cursor.fetchone()
+    preferences = json.loads(row[0]) if row else {}
+
+    if isinstance(tags, str):
+        tags = [t.strip().lower() for t in tags.split(",")]
+    else:
+        tags = [t.strip().lower() for t in tags]
+
+    # Update weights
+    for tag in tags:
+        if tag:
+            preferences[tag] = preferences.get(tag, 0) + 1
+
+    preferences_json = json.dumps(preferences)
+    cursor.execute("""
+        UPDATE user_preferences
+        SET preferences = ?
+        WHERE user_id = ?
+    """, (preferences_json, user_id))
+
+    conn.commit()
+    conn.close()
+
+
 if __name__ == "__main__":
     init_auth_db()
