@@ -377,17 +377,75 @@ def for_you():
     # Combine all events (only user events in user's city)
     all_events = filtered_user_events + google_events
 
-    # Score and sort all events by user preferences
-    def score_event(event):
-        score = 0
-        tags = event.get('tag', '').split(",")
-        for tag in tags:
-            tag = tag.strip().lower()
-            score += user_prefs.get(tag, 0)
-        return score
+    # --- BATCHING LOGIC: 5 events per batch, 70% from liked tags (weighted), 30% from unliked tags ---
+    import random
+    BATCH_SIZE = 5
+    LIKE_RATIO = 0.7
+    batch_num = int(request.args.get('batch', 1))
+    user_liked_tags = {tag: count for tag, count in user_prefs.items() if count > 0}
+    unliked_tags = set([e.get('tag', 'other') for e in all_events]) - set(user_liked_tags.keys())
 
-    all_events.sort(key=score_event, reverse=True)
-    return render_template("for_you.html", events=all_events, preferences=prefs)
+    # Partition events by tag
+    tag_to_events = {}
+    for event in all_events:
+        tag = event.get('tag', 'other')
+        tag_to_events.setdefault(tag, []).append(event)
+
+    # Calculate how many liked/unliked events per batch
+    num_liked = round(BATCH_SIZE * LIKE_RATIO)
+    num_unliked = BATCH_SIZE - num_liked
+
+    # Weighted selection for liked tags
+    liked_tag_total = sum(user_liked_tags.values())
+    liked_tag_weights = {tag: (count / liked_tag_total) if liked_tag_total > 0 else 0 for tag, count in user_liked_tags.items()}
+
+    # Flatten all events in a deterministic order for batching
+    all_batch_events = []
+    used_indices = set()
+    total_batches = 0
+    while True:
+        liked_events = []
+        liked_tags = list(user_liked_tags.keys())
+        for _ in range(num_liked):
+            if not liked_tags:
+                break
+            tag = random.choices(liked_tags, weights=[liked_tag_weights[t] for t in liked_tags], k=1)[0]
+            if tag_to_events.get(tag):
+                liked_events.append(tag_to_events[tag].pop(0))
+            else:
+                liked_tags.remove(tag)
+        unliked_events = []
+        unliked_tags_list = list(unliked_tags)
+        random.shuffle(unliked_tags_list)
+        for tag in unliked_tags_list:
+            if tag_to_events.get(tag):
+                unliked_events.append(tag_to_events[tag].pop(0))
+            if len(unliked_events) >= num_unliked:
+                break
+        batch_events = liked_events + unliked_events
+        if len(batch_events) < BATCH_SIZE:
+            remaining = []
+            for evs in tag_to_events.values():
+                remaining.extend(evs)
+            random.shuffle(remaining)
+            batch_events += remaining[:BATCH_SIZE - len(batch_events)]
+        if not batch_events:
+            break
+        random.shuffle(batch_events)
+        all_batch_events.extend(batch_events)
+        total_batches += 1
+        if sum(len(evs) for evs in tag_to_events.values()) == 0:
+            break
+
+    # Serve the correct batch
+    start_idx = (batch_num - 1) * BATCH_SIZE
+    end_idx = start_idx + BATCH_SIZE
+    batch_to_show = all_batch_events[start_idx:end_idx]
+
+    # For frontend: let it know if more batches exist
+    more_batches = end_idx < len(all_batch_events)
+
+    return render_template("for_you.html", events=batch_to_show, preferences=prefs, batch=batch_num, more_batches=more_batches)
 
 @app.route('/api/like_event', methods=['POST'])
 def api_like_event():
