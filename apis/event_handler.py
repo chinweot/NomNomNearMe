@@ -4,7 +4,7 @@ from apis.yelp import search_yelp_businesses
 from apis.reddit_api import search_reddit_events
 
 # getting keys 
-YELP_API_KEY = os.environ.get('YELP_KEY')
+#YELP_API_KEY = os.environ.get('YELP_KEY')
 REDDIT_CLIENT_ID = os.environ.get('REDDIT_CLIENT_ID')
 REDDIT_CLIENT_SECRET = os.environ.get('REDDIT_CLIENT_SECRET')
 REDDIT_USER_AGENT = os.environ.get('REDDIT_USER_AGENT')

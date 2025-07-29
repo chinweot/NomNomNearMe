@@ -86,8 +86,9 @@ def signup():
 
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
-            session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('onboarding_location'))
+            # change from mock to this 
+            session['user_id'] = result['user_id']
+            return redirect(url_for('home'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
             error_message = result['message']  # Capture the error message
@@ -136,8 +137,9 @@ def home():
         result = login_user(username, password) 
 
         if result["status"] == "access granted":
-            session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('for_you')) 
+            #change from mock to data
+            session['user_id'] = result['user_id']
+            return redirect(url_for('search')) 
         else:
             print(f"LOGIN FAILED WITH STATUS {result['status']}")
             # No redirect, stay on the login page to show error
@@ -149,7 +151,8 @@ def home():
 @app.route("/search")
 def search():
     if 'user_id' not in session:
-        session['user_id'] = MOCK_USER_ID # TEMPORARY
+        return redirect(url_for('home'))
+        #session['user_id'] = MOCK_USER_ID # TEMPORARY
     return render_template("search.html")
 
 
@@ -222,11 +225,13 @@ def about():
 
 @app.route('/api/save_event', methods=['POST'])
 def api_save_event():
+    """
     if 'user_id' not in session:
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
-    user_id = MOCK_USER_ID
-    event_data = request.json
-
+    #user_id = MOCK_USER_ID
+    #event_data = request.json
+    """
+    """
     if not event_data:
         return jsonify({"status": "fail", "message": "No event data provided."}), 400
 
@@ -235,14 +240,24 @@ def api_save_event():
         return jsonify({"status": "success", "message": result.get('message', "Event saved successfully!")}), 200
     else:
         return jsonify({"status": "fail", "message": result.get('message', "Failed to save event.")}), 400
+    """
+    if 'user_id' not in session:
+        return jsonify({"status": "fail", "message": "User not logged in."}), 401
+    data = request.get_json()
+    result = save_event(session['user_id'], data)
+    if result['status'] == 'success':
+        return jsonify(result), 200
+    else:
+        return jsonify(result), 400
 
 
 @app.route('/api/delete_saved_event', methods=['POST'])
 def api_delete_saved_event():
+    """
     if 'user_id' not in session:
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
 
-    user_id = MOCK_USER_ID
+    #user_id = MOCK_USER_ID
     event_global_id = request.json.get('global_id')
 
     if not event_global_id:
@@ -253,13 +268,29 @@ def api_delete_saved_event():
         return jsonify({"status": "success", "message": result.get('message', "Event removed successfully!")}), 200
     else:
         return jsonify({"status": "fail", "message": result.get('message', "Failed to remove event.")}), 400
-
+    """
+    if 'user_id' not in session:
+        return jsonify({"status": "fail", "message": "User not logged in."}), 401
+    event_global_id = request.json.get('global_id')
+    if not event_global_id:
+        return jsonify({"status": "fail", "message": "No event global_id provided for deletion."}), 400
+    result = delete_saved_event(session['user_id'], event_global_id)
+    if result['status'] == 'success':
+        return jsonify(result), 200
+    else:
+        return jsonify(result), 400
 @app.route('/api/saved_events', methods=['GET'])
 def api_saved_events():
-    user_id = MOCK_USER_ID
+    #user_id = MOCK_USER_ID
+    """
     if not user_id:
         return jsonify({'message': 'User not logged in'}), 401
     saved_events = db.get_saved_events(user_id) # Assuming db.get_saved_events exists
+    return jsonify({'events': saved_events})
+    """
+    if 'user_id' not in session:
+        return jsonify({'message': 'User not logged in'}), 401
+    saved_events = db.get_saved_events(session['user_id'])
     return jsonify({'events': saved_events})
 
 # ---------- FETCH API DATA ----------

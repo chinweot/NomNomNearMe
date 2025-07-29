@@ -48,6 +48,7 @@ def search_reddit_events(location, terms, reddit_client_id, reddit_client_secret
     
     try:
         reddit_subreddit_obj = reddit.subreddit(subreddit_name)
+        print(reddit_subreddit_obj)
     except Exception as e:
         print(f"Error accessing Reddit subreddit '{subreddit_name}': {e}")
         return []
