@@ -3,10 +3,37 @@ from db import init_auth_db, register_user, login_user, save_event, get_saved_ev
 from forms import RegistrationForm, LoginForm
 from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
+from apis.google_events import get_google_events
+import google.generativeai as genai
 import db
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Wnv1I6Tsd7'
+
+# Configure Gemini API
+import os
+GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+else:
+    gemini_model = None
+
+def gemini_tag(title, description):
+    if not gemini_model:
+        # fallback
+        return 'other'
+    prompt = f"""Given the following event title and description, return a single tag (one word, lowercase) that best categorizes the event. Example tags: food, music, sports, comedy, networking, art, education, festival, other. If unsure, return 'other'.\n\nTitle: {title}\nDescription: {description}\nTag:"""
+    try:
+        response = gemini_model.generate_content(prompt)
+        tag = response.text.strip().split()[0].lower()
+        # Only allow known tags
+        allowed_tags = {'food','music','sports','comedy','networking','art','education','festival','other'}
+        return tag if tag in allowed_tags else 'other'
+    except Exception as e:
+        print(f"Gemini tag error: {e}")
+        return 'other'
 
 
 init_auth_db()
@@ -125,11 +152,67 @@ def search():
         session['user_id'] = MOCK_USER_ID # TEMPORARY
     return render_template("search.html")
 
+
+
 @app.route("/for_you")
 def for_you():
     if 'user_id' not in session:
         session['user_id'] = MOCK_USER_ID # TEMPORARY
-    return render_template("for_you.html")
+    location = session.get('user_location', 'New York')
+    # Get user events and use Gemini to tag
+    user_events = get_user_events()
+    for ue in user_events:
+        title = ue.get('title', '')
+        desc = ''
+        tag = gemini_tag(title, desc)
+        ue['tag'] = tag
+        ue['source'] = 'user'
+        ue['title'] = title
+        ue['date'] = ue.get('event_time', '')
+        ue['description'] = desc
+        ue['address'] = ue.get('location', '')
+        ue['link'] = ''
+        ue['image'] = '/static/img/logo.png'  # Placeholder or user-uploaded image if available
+
+    # Get Google events and add a tag (try to infer from description/title)
+    try:
+        google_events = get_google_events(location)
+    except Exception as e:
+        print(f"Error fetching Google events: {e}")
+        google_events = []
+    for ge in google_events:
+        title = ge.get('title', '')
+        desc = ge.get('description', '')
+        tag = gemini_tag(title, desc)
+        ge['tag'] = tag
+        ge['source'] = 'google'
+        # Flatten date field
+        date_val = ge.get('date', '')
+        if isinstance(date_val, dict):
+            ge['date'] = date_val.get('when') or date_val.get('start_date') or ''
+        else:
+            ge['date'] = str(date_val)
+        # Flatten address field
+        addr_val = ge.get('address', '')
+        if isinstance(addr_val, list):
+            ge['address'] = ', '.join(addr_val)
+        else:
+            ge['address'] = str(addr_val)
+        ge['description'] = desc
+        ge['link'] = ge.get('link', ge.get('event_url', ''))
+        # Use thumbnail or image if available
+        ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
+
+    # Blend and sort events (by date if possible)
+    all_events = user_events + google_events
+    def event_sort_key(ev):
+        # Always return a string for sorting, fallback to empty string if date missing
+        date_val = ev.get('date', '')
+        if date_val is None:
+            return ''
+        return str(date_val)
+    all_events.sort(key=event_sort_key)
+    return render_template("for_you.html", events=all_events)
 
 @app.route('/about')
 def about():

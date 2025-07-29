@@ -28,10 +28,29 @@
             </div>
         </header>
 
-        <main class="flex-grow flex items-center justify-center">
-            <div class="text-center">
-                <h1 class="floating text-4xl font-bold text-gray-600 mb-4">Feed Will be Here</h1>
-                <p class="text-gray-500">Personalized recommendations</p>
+
+        <main class="flex-grow container mx-auto px-4 py-8">
+            <h1 class="floating text-4xl font-bold text-gray-600 mb-8 text-center">For You: Food & Local Events Near You</h1>
+            <div class="space-y-6">
+                {% if events and events|length > 0 %}
+                    {% for event in events %}
+                        <div class="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row items-start gap-6">
+                            <div class="flex-shrink-0 w-32 h-32 overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
+                                <img src="{{ event.image }}" alt="Event image" class="object-cover w-full h-full" onerror="this.src='/static/img/logo.png'">
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-xl font-bold mb-2">{{ event.title }}</h3>
+                                {% if event.date %}<div class="text-gray-700 mb-1"><span class="font-semibold">Date:</span> {{ event.date }}</div>{% endif %}
+                                {% if event.address %}<div class="text-gray-700 mb-1"><span class="font-semibold">Address:</span> {{ event.address }}</div>{% endif %}
+                                {% if event.description %}<div class="text-gray-600 mb-1">{{ event.description }}</div>{% endif %}
+                                {% if event.link %}<a href="{{ event.link }}" target="_blank" class="text-blue-500 hover:underline text-sm">More Info</a>{% endif %}
+                                <div class="mt-2 text-xs text-gray-400">Tag: {{ event.tag|capitalize }} | Source: {{ event.source|capitalize }}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-gray-500">No events found.</p>
+                {% endif %}
             </div>
         </main>
 
