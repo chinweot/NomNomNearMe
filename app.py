@@ -50,9 +50,10 @@ def post_event():
         location = request.form.get("location", "").strip()
         event_time = request.form.get("event_time", "").strip()
         timezone = request.form.get("timezone", "").strip()
+        description = request.form.get("description", "").strip() 
         if not (title and location and event_time and timezone):
             return render_template("post_event.html", error="All fields are required.")
-        add_user_event(title, location, event_time, timezone)
+        add_user_event(title, location, event_time, timezone, description)
         return redirect(url_for("user_events"))
     return render_template("post_event.html")
 

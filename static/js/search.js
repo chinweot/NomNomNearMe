@@ -197,10 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="mr-1">📍</span>
           <span>${event.location}</span>
         </div>
-        <div class="flex items-center text-gray-600 mt-1">
-          <span class="mr-1">🕒</span>
-          <span>${event.date}</span>
-        </div>
         <button data-global-id="${event.global_id}" class="unsave-btn px-3 py-1 rounded text-white font-semibold bg-red-500 hover:bg-red-600">
         Unsave
         </button>
@@ -244,10 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="mr-1">📍</span>
                 <span>${event.location}</span>
             </div>
-            <div class="flex items-center text-gray-600 mt-1">
-                <span class="mr-1">🕒</span>
-                <span>${event.date}</span>
-            </div>
             ${
               event.url
                 ? `<a href="${event.url}" target="_blank" class="text-blue-500 hover:underline text-sm mt-1 inline-block">More Info</a>`
@@ -258,7 +250,6 @@ document.addEventListener("DOMContentLoaded", () => {
             data-global-id="${event.global_id}" 
             data-source="${event.source}"
             data-title="${event.title}"
-            data-date="${event.date}"
             data-location="${event.location}"
             data-url="${event.url}"
             class="save-toggle-btn mt-3 px-3 py-1 rounded text-white font-semibold ${
