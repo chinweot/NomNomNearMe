@@ -25,7 +25,7 @@ def init_user_events_db():
     conn.commit()
     conn.close()
 
-def add_user_event(title, location, event_time, timezone, tag=None, description=None):
+def add_user_event(title, location, event_time, timezone, tag=None, description=""):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
@@ -34,6 +34,22 @@ def add_user_event(title, location, event_time, timezone, tag=None, description=
     ''', (title, location, event_time, timezone, tag, description, datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
+
+def format_event_time(event_time_str):
+    """Convert '2025-07-23T09:57' to 'July 23, 2025 at 9:57 AM'"""
+    try:
+        dt = datetime.fromisoformat(event_time_str)
+        return dt.strftime("%B %d, %Y at %I:%M %p")
+    except:
+        return event_time_str
+
+def format_created_at(created_at_str):
+    """Convert '2025-07-28T09:57:06.466820' to 'July 28, 2025'"""
+    try:
+        dt = datetime.fromisoformat(created_at_str)
+        return dt.strftime("%B %d, %Y")
+    except:
+        return created_at_str
 
 def get_user_events():
     conn = sqlite3.connect(DB_PATH)
@@ -46,11 +62,11 @@ def get_user_events():
             "id": row[0],
             "title": row[1],
             "location": row[2],
-            "event_time": row[3],
+            "event_time": format_event_time(row[3]),
             "timezone": row[4],
             "tag": row[5],
             "description": row[6],
-            "created_at": row[7]
+            "created_at": format_created_at(row[7])
         }
         for row in events
     ]
