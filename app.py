@@ -3,10 +3,37 @@ from db import init_auth_db, register_user, login_user, save_event, get_saved_ev
 from forms import RegistrationForm, LoginForm
 from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
+from apis.google_events import get_google_events
+import google.generativeai as genai
 import db
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'Wnv1I6Tsd7'
+
+# Configure Gemini API
+import os
+GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel("gemini-2.5-flash")
+else:
+    gemini_model = None
+
+def gemini_tag(title, description):
+    if not gemini_model:
+        # fallback
+        return 'other'
+    prompt = f"""Given the following event title and description, return a single tag (one word, lowercase) that best categorizes the event. Example tags: food, music, sports, comedy, networking, art, education, festival, other. If unsure, return 'other'.\n\nTitle: {title}\nDescription: {description}\nTag:"""
+    try:
+        response = gemini_model.generate_content(prompt)
+        tag = response.text.strip().split()[0].lower()
+        # Only allow known tags
+        allowed_tags = {'food','music','sports','comedy','networking','art','education','festival','other'}
+        return tag if tag in allowed_tags else 'other'
+    except Exception as e:
+        print(f"Gemini tag error: {e}")
+        return 'other'
 
 
 init_auth_db()
@@ -59,13 +86,41 @@ def signup():
 
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
-            session['user_id'] = MOCK_USER_ID #use real user id?
-            return redirect(url_for('complete_profile'))
+            session['user_id'] = MOCK_USER_ID 
+            return redirect(url_for('complete_profile')) # or 'onboarding_location'
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
             error_message = result['message']  # Capture the error message
 
     return render_template("signup.html", form=form, error_message=error_message)
+
+# ---------- ONBOARDING FLOW ----------
+
+@app.route("/onboarding/location", methods=['GET', 'POST'])
+def onboarding_location():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        location = request.form.get('location', '').strip()
+        if location:
+            session['user_location'] = location
+            return redirect(url_for('onboarding_interests'))
+    
+    return render_template("onboarding_location.html")
+
+@app.route("/onboarding/interests", methods=['GET', 'POST'])
+def onboarding_interests():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        interests = request.form.get('interests', '').strip()
+        if interests:
+            session['user_interests'] = interests
+            return redirect(url_for('for_you'))
+    
+    return render_template("onboarding_interests.html")
 
 # --- LOGIN PAGE 
 
@@ -82,7 +137,7 @@ def home():
 
         if result["status"] == "access granted":
             session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('search')) 
+            return redirect(url_for('for_you')) 
         else:
             print(f"LOGIN FAILED WITH STATUS {result['status']}")
             # No redirect, stay on the login page to show error
@@ -102,6 +157,7 @@ def search():
 #    if 'user_id' not in session:
 #        session['user_id'] = MOCK_USER_ID # TEMPORARY
 #    return render_template("for_you.html")
+
 
 @app.route('/about')
 def about():
@@ -195,9 +251,9 @@ def for_you():
         return redirect(url_for("complete_profile"))
 
     location = prefs["location"]
-    user_prefs = prefs["preferences"]  # dict: {"music":5, "sports":3, ...}
+    user_prefs = prefs["preferences"]
 
-    # -------- Fetch and tag user events --------
+    # fetch and tag user events TEMPORARY
     user_events = get_user_events()
     for ue in user_events:
         title = ue.get('title', '')
@@ -212,7 +268,7 @@ def for_you():
         ue['link'] = ''
         ue['image'] = '/static/img/logo.png'
 
-    # -------- Fetch and tag Google events --------
+    # Fetch and tag api events
     try:
         google_events = get_google_events(location)
     except Exception as e:
@@ -236,7 +292,7 @@ def for_you():
     # Combine
     all_events = user_events + google_events
 
-    # -------- Score events based on user prefs --------
+    # Score based on prefs
     def score_event(event):
         score = 0
         tags = event.get('tag', '').split(",") 

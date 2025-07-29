@@ -16,95 +16,122 @@
 
 </head>
 
-<body class="bg-gray-100">
-  <!-- Header -->
-  <header class="bg-white shadow-md py-4">
-    <div class="container mx-auto px-4 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <img src="../static/img/logo.png" alt="App Logo" class="w-8 h-8 object-contain" />
-        <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+<body class="bg-gray-100 font-poppins">
+  <div class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-md py-4">
+      <div class="container mx-auto px-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <img src="../static/img/logo.png" alt="App Logo" class="w-8 h-8 object-contain" />
+          <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+        </div>
+        <nav class="flex items-center space-x-6">
+          <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
+          <a href="{{ url_for('for_you') }}" class="nav-link text-gray-600 hover:text-orange-500">For You</a>
+          <a href="{{ url_for('user_events') }}" class="nav-link text-gray-600 hover:text-orange-500">Free Events</a>
+          <a href="{{ url_for('search') }}" class="nav-link text-gray-600 hover:text-orange-500">Search</a>
+          <a href="{{ url_for('about') }}" class="nav-link text-gray-600 hover:text-orange-500">About</a>
+          <a href= "{{ url_for('home') }}" class="nav-link text-gray-600 hover:text-red-500 font-medium">Logout</a>
+        </nav>
       </div>
-      <nav class="flex items-center space-x-6">
-        <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
-        <a href="{{ url_for('for_you') }}" class="text-gray-600 hover:text-orange-500">For You</a>
-        <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
-        <a href="{{ url_for('search') }}" class="text-gray-600 hover:text-orange-500">Home</a>
-        <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
-        <a href= "{{ url_for('home') }}" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
-      </nav>
-    </div>
-  </header>
+    </header>
 
-  <!-- Hero Banner -->
-  <section class="bg-orange-500 text-white py-10">
-    <div class="container mx-auto px-4 text-center">
-      <h1 class="text-4xl font-bold">Post a Free Event</h1>
-      <p class="text-white text-opacity-90 mt-2">Share your food event with the community</p>
-    </div>
-  </section>
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8">
+      
+      <!-- Page Heading -->
+      <h1 class="floating text-4xl font-bold text-center mb-4">Post a Free Event</h1>
+      <p class="text-gray-600 text-center mb-10">Share your food event with the community</p>
 
-  <!-- Main Form Section -->
-  <main class="py-12">
-    <div class="container mx-auto px-4">
-      <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-sm">
+      <!-- Main Form Section -->
+      <div class="max-w-2xl mx-auto">
+        <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
 
-        <form method="POST" action="/post_event" class="space-y-6">
-          <div>
-            <label for="title" class="block text-gray-700 font-medium mb-1">Event Name</label>
-            <input type="text" id="title" name="title" required
-              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
-              placeholder="e.g. Pizza Night at Tech Club">
+          <!-- Display Error Message -->
+          {% if error %}
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+            {{ error }}
           </div>
+          {% endif %}
 
-          <div>
-            <label for="location" class="block text-gray-700 font-medium mb-1">Location</label>
-            <input type="text" id="location" name="location" required
-              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
-              placeholder="e.g. Engineering Building, Room 101">
+          <form method="POST" action="/post_event" class="space-y-6">
+            
+            <div class="input-container">
+              <label for="title" class="block text-gray-700 font-medium mb-2">
+                <span class="text-lg mr-2">🎉</span>Event Name
+              </label>
+              <input type="text" id="title" name="title" required
+                class="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none bg-gray-50 transition-all"
+                placeholder="e.g. Pizza Night at Tech Club">
+            </div>
+
+            <div class="input-container">
+              <label for="location" class="block text-gray-700 font-medium mb-2">
+                <span class="text-lg mr-2">📍</span>Location
+              </label>
+              <input type="text" id="location" name="location" required
+                class="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none bg-gray-50 transition-all"
+                placeholder="e.g. Engineering Building, Room 101">
+            </div>
+
+            <div class="input-container">
+              <label for="event_time" class="block text-gray-700 font-medium mb-2">
+                <span class="text-lg mr-2">🕒</span>Event Time
+              </label>
+              <input type="datetime-local" id="event_time" name="event_time" required
+                class="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none bg-gray-50 transition-all">
+            </div>
+
+            <div class="input-container">
+              <label for="timezone" class="block text-gray-700 font-medium mb-2">
+                <span class="text-lg mr-2">🌎</span>Timezone
+              </label>
+              <input type="text" id="timezone" name="timezone" required
+                class="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none bg-gray-50 transition-all"
+                placeholder="e.g. America/New_York">
+            </div>
+
+            <div class="input-container">
+              <label for="description" class="block text-gray-700 font-medium mb-2">
+                <span class="text-lg mr-2">📝</span>Event Description
+              </label>
+              <textarea id="description" name="description" rows="4"
+                class="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none bg-gray-50 transition-all"
+                placeholder="Describe your event... What food will be served? Any special details?"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+              <button type="submit"
+                class="search-button w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-all hover:from-orange-500 hover:to-orange-700">
+                Post Event
+              </button>
+            </div>
+          </form>
+
+          <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div class="flex items-start">
+              <span class="text-lg mr-2">ℹ️</span>
+              <div>
+                <p class="text-sm text-blue-800 font-medium">Event Guidelines</p>
+                <p class="text-sm text-blue-700 mt-1">All events posted will be reviewed to ensure they're free and appropriate for the community.</p>
+              </div>
+            </div>
           </div>
-
-          <div>
-            <label for="event_time" class="block text-gray-700 font-medium mb-1">Event Time</label>
-            <input type="datetime-local" id="event_time" name="event_time" required
-              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none">
-          </div>
-
-          <div>
-            <label for="timezone" class="block text-gray-700 font-medium mb-1">Timezone</label>
-            <input type="text" id="timezone" name="timezone" required
-              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
-              placeholder="e.g. America/New_York">
-          </div>
-
-          <div>
-            <label for="description" class="block text-gray-700 font-medium mb-1">Event Description</label>
-            <textarea id="description" name="description" rows="4"
-              class="form-input w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none"
-              placeholder="Describe your event..."></textarea>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="pt-4">
-            <button type="submit"
-              class="submit-button w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition-all duration-200">
-              Post Event
-            </button>
-          </div>
-        </form>
-
-        <p class="mt-6 text-center text-sm text-gray-500">
-          Note: All events posted will be reviewed
-        </p>
+        </div>
       </div>
-    </div>
-  </main>
 
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-6 mt-12">
-    <div class="container mx-auto px-4 text-center">
-      <p>© 2025 Nom Nom Near Me - Find free social events near you</p>
-    </div>
-  </footer>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
+      <div class="container mx-auto px-4 text-center">
+        <p>© 2025 Nom Nom Near Me - Find free social events near you</p>
+      </div>
+    </footer>
+
+  </div>
 
  <script src="{{ url_for('static', filename='js/post_event.js') }}"></script>
 </body>

@@ -2,21 +2,101 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Free Events Posted by Users</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Free Events Posted by Users - Nom Nom Near Me</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="../static/css/globals.css">
 </head>
-<body>
-    <h1>Free Events Posted by Users</h1>
-    <a href="/post_event">Post a New Free Event</a>
-    <ul>
-        {% for event in events %}
-        <li>
-            <strong>{{ event.title }}</strong> - {{ event.location }}<br>
-            Time: {{ event.event_time }} ({{ event.timezone }})<br>
-            Posted: {{ event.created_at }}
-        </li>
-        {% else %}
-        <li>No events posted yet.</li>
-        {% endfor %}
-    </ul>
+<body class="bg-gray-100 font-poppins">
+    <div class="min-h-screen flex flex-col">
+
+        <!-- Header -->
+        <header class="bg-white shadow-md py-4">
+            <div class="container mx-auto px-4 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <img src="../static/img/logo.png" alt="Logo" class="w-8 h-8 object-contain" />
+                    <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
+                    <a href="{{ url_for('for_you') }}" class="nav-link text-gray-600 hover:text-orange-500">For You</a>
+                    <a href="{{ url_for('user_events') }}" class="nav-link text-gray-600 hover:text-orange-500">Free Events</a>
+                    <a href="{{ url_for('search') }}" class="nav-link text-gray-600 hover:text-orange-500">Search</a>
+                    <a href="{{ url_for('about') }}" class="nav-link text-gray-600 hover:text-orange-500">About</a>
+                    <a href="{{ url_for('home') }}" class="nav-link text-gray-600 hover:text-red-500 font-medium">Logout</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow container mx-auto px-4 py-8">
+            
+            <!-- Page Heading -->
+            <h1 class="floating text-3xl font-bold text-center mb-8">Free Events Posted by Users</h1>
+
+            <!-- Post New Event Button -->
+            <div class="text-center mb-10">
+                <a href="{{ url_for('post_event') }}" class="search-button bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold px-8 py-3 rounded-lg transition-all hover:from-orange-500 hover:to-orange-700 inline-block">
+                    Post a New Free Event
+                </a>
+            </div>
+
+            <!-- Events Container -->
+            <div class="max-w-4xl mx-auto">
+                {% if events %}
+                    <div class="grid gap-6">
+                        {% for event in events %}
+                        <div class="card-hover bg-white rounded-xl shadow-lg overflow-hidden p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-grow">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-2">{{ event.title }}</h3>
+                                    
+                                    <div class="space-y-2 text-gray-600">
+                                        <div class="flex items-center">
+                                            <span class="text-lg mr-2">📍</span>
+                                            <span class="font-medium">{{ event.location }}</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center">
+                                            <span class="text-lg mr-2">🕒</span>
+                                            <span>{{ event.event_time }} ({{ event.timezone }})</span>
+                                        </div>
+                                        
+                                        <div class="flex items-center text-sm text-gray-500">
+                                            <span class="text-lg mr-2">📅</span>
+                                            <span>Posted: {{ event.created_at }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <!-- No Events State -->
+                    <div class="text-center py-16">
+                        <div class="card-hover bg-white rounded-xl shadow-lg p-12 max-w-md mx-auto">
+                            <div class="text-6xl mb-4">🎉</div>
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">No Events Yet</h3>
+                            <p class="text-gray-600 mb-6">Be the first to share a free event with the community!</p>
+                            <a href="{{ url_for('post_event') }}" class="search-button bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold px-6 py-2 rounded-lg transition-all hover:from-orange-500 hover:to-orange-700 inline-block">
+                                Post First Event
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-800 text-white py-6">
+            <div class="container mx-auto px-4 text-center">
+                <p>© 2025 Nom Nom Near Me - Find the best food events around you</p>
+            </div>
+        </footer>
+    </div>
 </body>
 </html>

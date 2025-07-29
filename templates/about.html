@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,252 +13,280 @@
 
 </head>
 
-<body class="bg-gray-100">
-  <!-- Header -->
-  <header class="bg-white shadow-md py-4">
-    <div class="container mx-auto px-4 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <img src="../static/img/logo.png" alt="Logo" class="w-8 h-8 object-contain" />
-        <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
-      </div>
-      <nav class="flex items-center space-x-6">
-        <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
-        <a href="{{ url_for('for_you') }}" class="text-gray-600 hover:text-orange-500">For You</a>
-        <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
-        <a href="{{ url_for('search') }}" class="text-gray-600 hover:text-orange-500">Home</a>
-        <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
-        <a href= "{{ url_for('home') }}" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
-    </nav>
-    </div>
-  </header>
+<body class="bg-gray-100 font-poppins">
+  <div class="min-h-screen flex flex-col">
 
-  <!-- Main Content -->
-  <main>
-    <!-- Hero Section -->
-    <section class="bg-orange-100 py-12">
+    <!-- Header -->
+    <header class="bg-white shadow-md py-4">
+      <div class="container mx-auto px-4 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <img src="../static/img/logo.png" alt="Logo" class="w-8 h-8 object-contain" />
+          <span class="text-2xl font-bold text-orange-500">Nom Nom Near Me</span>
+        </div>
+        <nav class="flex items-center space-x-6">
+          <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
+          <a href="{{ url_for('for_you') }}" class="nav-link text-gray-600 hover:text-orange-500">For You</a>
+          <a href="{{ url_for('user_events') }}" class="nav-link text-gray-600 hover:text-orange-500">Free Events</a>
+          <a href="{{ url_for('search') }}" class="nav-link text-gray-600 hover:text-orange-500">Search</a>
+          <a href="{{ url_for('about') }}" class="nav-link text-gray-600 hover:text-orange-500">About</a>
+          <a href= "{{ url_for('home') }}" class="nav-link text-gray-600 hover:text-red-500 font-medium">Logout</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+      <!-- Hero Section -->
+      <section class="py-12">
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="floating text-4xl font-bold mb-4">About Us</h1>
+          <p class="text-lg text-gray-600 max-w-2xl mx-auto">Connecting students and community members with free food events.</p>
+        </div>
+      </section>
+
+      <!-- Our Mission -->
+      <section class="py-12">
+        <div class="container mx-auto px-4">
+          <div class="max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold mb-8 text-center">Our Mission</h2>
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="text-center mb-6">
+              </div>
+              <p class="text-gray-700 text-lg leading-relaxed mb-4">
+                At Nom Nom Near Me, we believe that affordable food and events brings people together. Our platform helps students and community members discover gatherings with free/cheap meals while creating opportunities to connect with like-minded people at social events.
+              </p>
+              <p class="text-gray-700 text-lg leading-relaxed">
+                We allow campus organizations and community groups bring visibility to events that offer food and foster community connections.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works -->
+      <section class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold mb-12 text-center">How It Works</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <!-- Step 1 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg text-center">
+              <div class="w-16 h-16 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <span class="font-bold text-white text-xl">1</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-4">🔍 Find Events</h3>
+              <p class="text-gray-600">Search for free food events near your location.</p>
+            </div>
+            
+            <!-- Step 2 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg text-center">
+              <div class="w-16 h-16 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <span class="font-bold text-white text-xl">2</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-4">🎉 Attend & Enjoy</h3>
+              <p class="text-gray-600">Show up at the event and enjoy free food or cheap food with others.</p>
+            </div>
+            
+            <!-- Step 3 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg text-center">
+              <div class="w-16 h-16 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center mb-6 mx-auto">
+                <span class="font-bold text-white text-xl">3</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-4">⭐ Share</h3>
+              <p class="text-gray-600"> Save your experiences and share events with friends.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Our Team -->
+      <section class="py-12">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold mb-12 text-center">Our Team</h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <!-- Hamed -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+              <div class="w-20 h-20 bg-gradient-to-r from-orange-200 to-orange-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span class="text-2xl">👨</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Hamed Diakite</h3>
+              <p class="text-orange-500 font-medium mb-2">Backend & Database</p>
+              <p class="text-gray-600 text-sm">BU student focusing on backend logic and data storage.</p>
+            </div>
+
+            <!-- Chichi -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+              <div class="w-20 h-20 bg-gradient-to-r from-orange-200 to-orange-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span class="text-2xl">👩</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Chichi Otti</h3>
+              <p class="text-orange-500 font-medium mb-2">Frontend</p>
+              <p class="text-gray-600 text-sm">NYU student designing and implementing the user interface.</p>
+            </div>
+
+            <!-- David -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+              <div class="w-20 h-20 bg-gradient-to-r from-orange-200 to-orange-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span class="text-2xl">👨</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-2">David Pascual</h3>
+              <p class="text-orange-500 font-medium mb-2">Backend</p>
+              <p class="text-gray-600 text-sm">Syracuse Student working on API endpoints and core backend features.</p>
+            </div>
+
+            <!-- Gustavo -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+              <div class="w-20 h-20 bg-gradient-to-r from-orange-200 to-orange-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span class="text-2xl">👨</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Gustavo Belaunde</h3>
+              <p class="text-orange-500 font-medium mb-2">Backend</p>
+              <p class="text-gray-600 text-sm">Trinity University building backend logic and API integrations.</p>
+            </div>
+
+            <!-- Iverson -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+              <div class="w-20 h-20 bg-gradient-to-r from-orange-200 to-orange-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span class="text-2xl">👨</span>
+              </div>
+              <h3 class="text-xl font-semibold mb-2">Iverson Lopez</h3>
+              <p class="text-orange-500 font-medium mb-2">Full Stack</p>
+              <p class="text-gray-600 text-sm">NJIT student building features across frontend and backend.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold mb-12 text-center">What We Offer</h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            
+            <!-- Feature 1 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="flex items-start">
+                <div class="text-4xl mr-6 mt-2">📍</div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">Location-Based Search</h3>
+                  <p class="text-gray-600 leading-relaxed">Find personalized food-related events, pop-ups, and gatherings in your area.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="flex items-start">
+                <div class="text-4xl mr-6 mt-2">⏰</div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">Real-time Updates</h3>
+                  <p class="text-gray-600 leading-relaxed">Get notifications about new events and last-minute opportunities.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="flex items-start">
+                <div class="text-4xl mr-6 mt-2">🧑‍🤝‍🧑</div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">Community Driven</h3>
+                  <p class="text-gray-600 leading-relaxed">Events are submitted and reviewed by our community members.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="flex items-start">
+                <div class="text-4xl mr-6 mt-2">✅</div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">Verified Events</h3>
+                  <p class="text-gray-600 leading-relaxed">Submitted Events are verified to ensure accuracy and reliability.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="flex items-start">
+                <div class="text-4xl mr-6 mt-2">💾</div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">Save Events</h3>
+                  <p class="text-gray-600 leading-relaxed">Users can save events they're interested in for easy access later.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="card-hover bg-white p-8 rounded-xl shadow-lg">
+              <div class="flex items-start">
+                <div class="text-4xl mr-6 mt-2">🔍</div>
+                <div>
+                  <h3 class="text-xl font-semibold mb-3">Smart Search</h3>
+                  <p class="text-gray-600 leading-relaxed">Filter events by food type, distance, and time to find exactly what you want.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="py-12">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold mb-12 text-center">Frequently Asked Questions</h2>
+          
+          <div class="max-w-3xl mx-auto space-y-6">
+            <!-- FAQ Item 1 -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+              <button class="flex justify-between items-center w-full text-left" onclick="toggleFAQ(this)">
+                <span class="font-semibold text-lg">Is Nom Nom Near Me free to use?</span>
+                <span class="text-orange-500 text-2xl font-bold">+</span>
+              </button>
+              <div class="mt-4 pt-4 border-t border-gray-100 hidden">
+                <p class="text-gray-600 leading-relaxed">Yes! Nom Nom Near Me is completely free for users. We believe everyone should have access to finding free food events in their community.</p>
+              </div>
+            </div>
+            
+            <!-- FAQ Item 2-->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+              <button class="flex justify-between items-center w-full text-left" onclick="toggleFAQ(this)">
+                <span class="font-semibold text-lg">Do I need to register to use the app?</span>
+                <span class="text-orange-500 text-2xl font-bold">+</span>
+              </button>
+              <div class="mt-4 pt-4 border-t border-gray-100 hidden">
+                <p class="text-gray-600 leading-relaxed">Yes, creating a free account allows you to save events, get personalized recommendations, and post your own events to share with the community.</p>
+              </div>
+            </div>
+
+            <!-- FAQ Item 3 -->
+            <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+              <button class="flex justify-between items-center w-full text-left" onclick="toggleFAQ(this)">
+                <span class="font-semibold text-lg">How do I post an event?</span>
+                <span class="text-orange-500 text-2xl font-bold">+</span>
+              </button>
+              <div class="mt-4 pt-4 border-t border-gray-100 hidden">
+                <p class="text-gray-600 leading-relaxed">Simply click the "Post Free Event" button, fill out the event details, and submit. All events are reviewed to ensure they meet our community guidelines.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6">
       <div class="container mx-auto px-4 text-center">
-        <h1 class="text-4xl font-bold mb-4">About Us</h1>
-        <p class="text-lg text-gray-700 max-w-2xl mx-auto">Connecting students and community members with free food events.</p>
+        <p>© 2025 Nom Nom Near Me - Find the best food events around you</p>
       </div>
-    </section>
+    </footer>
 
-    <!-- Our Mission -->
-    <section class="py-12 bg-white">
-      <div class="container mx-auto px-4">
-        <div class="max-w-3xl mx-auto">
-          <h2 class="text-2xl font-bold mb-6 text-center">Our Mission</h2>
-          <div class="bg-orange-50 p-6 rounded-lg">
-            <p class="text-gray-700">
-              At Nom Nom Near Me, we believe that good food brings people together. Our platform helps students and community members discover gatherings with free and cheap meals while creating opportunities to connect with like-minded people at social events.
-            </p>
-            <p class="text-gray-700 mt-4">
-              We partner with campus organizations and community groups to bring visibility to events that offer free food and foster community connections.
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
+  </div>
 
-    <!-- How It Works -->
-    <section class="py-12 bg-gray-100">
-      <div class="container mx-auto px-4">
-        <h2 class="text-2xl font-bold mb-8 text-center">How It Works</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <!-- Step 1 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 text-orange-500">
-              <span class="font-bold">1</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2">Find Events</h3>
-            <p class="text-gray-600">Search for free food events near your location.</p>
-          </div>
-          
-          <!-- Step 2 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 text-orange-500">
-              <span class="font-bold">2</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2">Attend & Enjoy</h3>
-            <p class="text-gray-600">Show up at the event and enjoy free food or cheap food with others.</p>
-          </div>
-          
-          <!-- Step 3 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 text-orange-500">
-              <span class="font-bold">3</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-2">Rate & Share</h3>
-            <p class="text-gray-600">Rate your experience and share events with friends.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- About Our Team -->
-    <section class="py-12 bg-white">
-      <div class="container mx-auto px-4">
-        <h2 class="text-2xl font-bold mb-8 text-center">Our Team</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          <!-- Hamed -->
-          <div class="bg-gray-50 p-6 rounded-lg text-center">
-            <div class="w-20 h-20 bg-orange-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span class="text-2xl">👨</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-1">Hamed Diakite</h3>
-            <p class="text-orange-500 mb-2">Backend & Database</p>
-            <p class="text-gray-600 text-sm">BU student focusing on backend logic and data storage.</p>
-          </div>
-
-          <!-- Chichi -->
-          <div class="bg-gray-50 p-6 rounded-lg text-center">
-            <div class="w-20 h-20 bg-orange-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span class="text-2xl">👩</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-1">Chichi Otti</h3>
-            <p class="text-orange-500 mb-2">Frontend</p>
-            <p class="text-gray-600 text-sm">NYU student Designing and implementing the user interface.</p>
-          </div>
-
-          <!-- David -->
-          <div class="bg-gray-50 p-6 rounded-lg text-center">
-            <div class="w-20 h-20 bg-orange-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span class="text-2xl">👨</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-1">David Pascual</h3>
-            <p class="text-orange-500 mb-2">Backend</p>
-            <p class="text-gray-600 text-sm">Syracuse Student working on API endpoints and core backend features.</p>
-          </div>
-
-          <!-- Gustavo -->
-          <div class="bg-gray-50 p-6 rounded-lg text-center">
-            <div class="w-20 h-20 bg-orange-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span class="text-2xl">👨</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-1">Gustavo Belaunde</h3>
-            <p class="text-orange-500 mb-2">Backend</p>
-            <p class="text-gray-600 text-sm">Trinity University building backend logic and API integrations.</p>
-          </div>
-
-          <!-- Iverson -->
-          <div class="bg-gray-50 p-6 rounded-lg text-center">
-            <div class="w-20 h-20 bg-orange-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span class="text-2xl">👨</span>
-            </div>
-            <h3 class="text-xl font-semibold mb-1">Iverson Lopez</h3>
-            <p class="text-orange-500 mb-2">Full Stack</p>
-            <p class="text-gray-600 text-sm">NJIT student building features across frontend and backend.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Features Section -->
-    <section class="py-12 bg-gray-100">
-      <div class="container mx-auto px-4">
-        <h2 class="text-2xl font-bold mb-8 text-center">What We Offer</h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          
-          <!-- Feature 1 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="flex items-start">
-              <div class="text-3xl mr-4">📍</div>
-              <div>
-                <h3 class="text-lg font-semibold mb-2">Location-Based Search</h3>
-                <p class="text-gray-600">Find personalized food-related events, pop-ups, and gatherings in your area.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Feature 2 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="flex items-start">
-              <div class="text-3xl mr-4">⏰</div>
-              <div>
-                <h3 class="text-lg font-semibold mb-2">Updates</h3>
-                <p class="text-gray-600">Get notifications about new events and last-minute opportunities.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Feature 3 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="flex items-start">
-              <div class="text-3xl mr-4">🧑‍🤝‍🧑</div>
-              <div>
-                <h3 class="text-lg font-semibold mb-2">Community Driven</h3>
-                <p class="text-gray-600">Events are submitted and reviewed by our community members.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Feature 4 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="flex items-start">
-              <div class="text-3xl mr-4">✅</div>
-              <div>
-                <h3 class="text-lg font-semibold mb-2">Verified Events</h3>
-                <p class="text-gray-600">Submitted Events are verified to ensure accuracy and reliability.</p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Feature 5 -->
-          <div class="bg-white p-6 rounded-lg shadow-sm">
-            <div class="flex items-start">
-              <div class="text-3xl mr-4">➕</div>
-              <div>
-                <h3 class="text-lg font-semibold mb-2">Save Events</h3>
-                <p class="text-gray-600">Users can save events they’re interested in.</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section class="py-12 bg-gray-100">
-      <div class="container mx-auto px-4">
-        <h2 class="text-2xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
-        
-        <div class="max-w-3xl mx-auto space-y-4">
-          <!-- FAQ Item 1 -->
-          <div class="bg-white p-4 rounded-lg shadow-sm">
-            <button class="flex justify-between items-center w-full text-left" onclick="toggleFAQ(this)">
-              <span class="font-medium">Is Nom Nom Near Me free to use?</span>
-              <span class="text-orange-500">+</span>
-            </button>
-            <div class="mt-2 hidden">
-              <p class="text-gray-600">Yes! Nom Nom Near Me is completely free for users.</p>
-            </div>
-          </div>
-          
-          <!-- FAQ Item 2-->
-          <div class="bg-white p-4 rounded-lg shadow-sm">
-            <button class="flex justify-between items-center w-full text-left" onclick="toggleFAQ(this)">
-              <span class="font-medium">Do I need to register to use the app?</span>
-              <span class="text-orange-500">+</span>
-            </button>
-            <div class="mt-2 hidden">
-              <p class="text-gray-600">Yes, creating a free account allows you save events.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-6">
-    <div class="container mx-auto px-4 text-center">
-      <p>© 2025 Nom Nom Near Me - Find free food events near you</p>
-    </div>
-  </footer>
-
-    <script src="{{ url_for('static', filename='js/about.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/about.js') }}"></script>
 </body>
 </html>
