@@ -35,17 +35,21 @@
             <form method="POST" action="{{ url_for('onboarding_interests') }}">
                 <div class="mb-6">
                     <div class="input-container flex items-center border rounded-lg p-3 bg-gray-50">
-                        <span class="text-xl mr-2">🔍</span>
-                        <input 
-                            type="text" 
-                            id="interests" 
-                            name="interests" 
-                            placeholder="pizza, burgers, free food, community events" 
-                            class="w-full bg-transparent outline-none"
-                            required
-                        >
+                        <span class="text-xl mr-2">🏷️</span>
+                        <select id="interests" name="interests" multiple required
+                            class="w-full bg-transparent outline-none h-32" size="8">
+                            <option value="food">Food</option>
+                            <option value="music">Music</option>
+                            <option value="sports">Sports</option>
+                            <option value="comedy">Comedy</option>
+                            <option value="networking">Networking</option>
+                            <option value="art">Art</option>
+                            <option value="education">Education</option>
+                            <option value="festival">Festival</option>
+                            <option value="other">Other</option>
+                        </select>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">Separate multiple interests with commas</p>
+                    <p class="text-xs text-gray-500 mt-2">Hold Ctrl (Windows) or Command (Mac) to select multiple interests</p>
                 </div>
 
                 <button type="submit" class="search-button w-full bg-gradient-to-r from-orange-400 to-orange-600 text-white py-3 rounded-lg font-semibold transition-all hover:from-orange-500 hover:to-orange-700">

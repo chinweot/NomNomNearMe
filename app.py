@@ -5,14 +5,18 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
+
 import db
+import math
+from dotenv import load_dotenv
+import os
 
 
+load_dotenv()  
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'Wnv1I6Tsd7'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'Wnv1I6Tsd7')
 
 # Configure Gemini API
-import os
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -50,9 +54,16 @@ def post_event():
         location = request.form.get("location", "").strip()
         event_time = request.form.get("event_time", "").strip()
         timezone = request.form.get("timezone", "").strip()
-        if not (title and location and event_time and timezone):
+        tag = request.form.get("tag", "other").strip().lower()  # New: get tag from form
+        description = request.form.get("description", "").strip()  # Optionally get description
+        if not (title and location and event_time and timezone and tag):
             return render_template("post_event.html", error="All fields are required.")
-        add_user_event(title, location, event_time, timezone)
+        # Pass tag to add_user_event if supported, else store in description for now
+        try:
+            add_user_event(title, location, event_time, timezone, tag, description)
+        except TypeError:
+            # Fallback for legacy add_user_event signature
+            add_user_event(title, location, event_time, timezone)
         return redirect(url_for("user_events"))
     return render_template("post_event.html")
 
@@ -113,18 +124,15 @@ def onboarding_location():
 def onboarding_interests():
     if 'user_id' not in session:
         return redirect(url_for('home'))
-    
+
     if request.method == 'POST':
-        interests = request.form.get('interests', '').strip()
-        if interests:
-            # Get location from session
+        # Get multiple selected interests from the multi-select dropdown
+        interests_list = request.form.getlist('interests')
+        if interests_list:
             location = session.get('user_location', '')
-            # Convert interests string to list (comma-separated)
-            interests_list = [interest.strip() for interest in interests.split(',') if interest.strip()]
-            # Save to database
             db.save_user_preferences(session['user_id'], location, interests_list)
             return redirect(url_for('for_you'))
-    
+
     return render_template("onboarding_interests.html")
 
 # --- LOGIN PAGE 
@@ -247,20 +255,57 @@ def for_you():
     location = prefs["location"]
     user_prefs = prefs["preferences"]
 
-    # fetch and tag user events TEMPORARY
+    # fetch user events and use stored tag/description, filter by user city
     user_events = get_user_events()
+    # City to (lat, lon) lookup for major US cities
+    city_coords = {
+        'new york': (40.7128, -74.0060),
+        'los angeles': (34.0522, -118.2437),
+        'chicago': (41.8781, -87.6298),
+        'houston': (29.7604, -95.3698),
+        'phoenix': (33.4484, -112.0740),
+        'philadelphia': (39.9526, -75.1652),
+        'san antonio': (29.4241, -98.4936),
+        'san diego': (32.7157, -117.1611),
+        'dallas': (32.7767, -96.7970),
+        'san jose': (37.3382, -121.8863)
+    }
+
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 3958.8  # Earth radius in miles
+        phi1, phi2 = math.radians(lat1), math.radians(lat2)
+        dphi = math.radians(lat2 - lat1)
+        dlambda = math.radians(lon2 - lon1)
+        a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+
+    user_city = None
+    user_latlon = None
+    if location:
+        user_city = location.split(',')[0].strip().lower()
+        user_latlon = city_coords.get(user_city)
+
+    filtered_user_events = []
     for ue in user_events:
-        title = ue.get('title', '')
-        desc = ''
-        tag = gemini_tag(title, desc)
-        ue['tag'] = tag
+        event_city = ue.get('location', '').split(',')[-1].strip().lower() if ',' in ue.get('location', '') else ue.get('location', '').strip().lower()
+        event_latlon = city_coords.get(event_city)
+        # If both user and event have coordinates, filter by distance (<= 50 miles)
+        if user_latlon and event_latlon:
+            dist = haversine(user_latlon[0], user_latlon[1], event_latlon[0], event_latlon[1])
+            if dist > 50:
+                continue
+        elif user_city and user_city not in event_city:
+            continue
+        ue['tag'] = ue.get('tag', 'other')
         ue['source'] = 'user'
-        ue['title'] = title
+        ue['title'] = ue.get('title', '')
         ue['date'] = ue.get('event_time', '')
-        ue['description'] = desc
+        ue['description'] = ue.get('description', '')
         ue['address'] = ue.get('location', '')
         ue['link'] = ''
         ue['image'] = '/static/img/logo.png'
+        filtered_user_events.append(ue)
 
     # Fetch and tag api events
     try:
@@ -283,51 +328,20 @@ def for_you():
         ge['link'] = ge.get('link', ge.get('event_url', ''))
         ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
 
-    # Combine
-    all_events = user_events + google_events
+    # Combine all events (only user events in user's city)
+    all_events = filtered_user_events + google_events
 
-    # Score based on prefs
+    # Score and sort all events by user preferences
     def score_event(event):
         score = 0
-        tags = event.get('tag', '').split(",") 
+        tags = event.get('tag', '').split(",")
         for tag in tags:
             tag = tag.strip().lower()
             score += user_prefs.get(tag, 0)
         return score
 
-    food_events = [e for e in all_events if e.get('type') == 'food']
-    social_events = [e for e in all_events if e.get('type') == 'social']
-
-    def pick_events(events):
-        if not events:
-            return []
-        
-        events.sort(key=score_event, reverse=True)
-        top_count = max(1, int(len(events) * 0.7))
-        top_events = events[:top_count]
-        random_events = events[top_count:]
-        
-        # Only sample if there are random events to sample from
-        if random_events:
-            sample_size = min(len(random_events), len(events) - top_count)
-            if sample_size > 0:
-                return top_events + random.sample(random_events, sample_size)
-        
-        return top_events
-
-    import random
-    final_events = []
-    max_len = max(len(food_events), len(social_events))
-
-    for i in range(max_len):
-        if i < len(food_events):
-            final_events.append(food_events[i])
-        if i < len(social_events):
-            final_events.append(social_events[i])
-
-    final_events = pick_events(final_events)
-
-    return render_template("for_you.html", events=final_events, preferences=prefs)
+    all_events.sort(key=score_event, reverse=True)
+    return render_template("for_you.html", events=all_events, preferences=prefs)
 
 @app.route('/api/like_event', methods=['POST'])
 def api_like_event():
