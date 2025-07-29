@@ -87,7 +87,7 @@ def signup():
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
             session['user_id'] = MOCK_USER_ID 
-            return redirect(url_for('complete_profile')) # or 'onboarding_location'
+            return redirect(url_for('onboarding_location'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
             error_message = result['message']  # Capture the error message
@@ -117,7 +117,12 @@ def onboarding_interests():
     if request.method == 'POST':
         interests = request.form.get('interests', '').strip()
         if interests:
-            session['user_interests'] = interests
+            # Get location from session
+            location = session.get('user_location', '')
+            # Convert interests string to list (comma-separated)
+            interests_list = [interest.strip() for interest in interests.split(',') if interest.strip()]
+            # Save to database
+            db.save_user_preferences(session['user_id'], location, interests_list)
             return redirect(url_for('for_you'))
     
     return render_template("onboarding_interests.html")
@@ -228,18 +233,7 @@ def api_events():
         return jsonify({"error" : str(e)}), 502
     
 #------------- USERS PREFERENCES AND LOCATION ----------
-@app.route("/complete_profile", methods=["GET", "POST"])
-def complete_profile():
-    if 'user_id' not in session:
-        return redirect(url_for("signup"))
 
-    if request.method == "POST":
-        location = request.form.get("location").strip()
-        preferences = request.form.getlist("preferences")  # expects checkboxes
-        db.save_user_preferences(session['user_id'], location, preferences)
-        return redirect(url_for("for_you"))
-
-    return render_template("complete_profile.html")
 
 @app.route("/for_you")
 def for_you():
@@ -248,7 +242,7 @@ def for_you():
 
     prefs = db.get_user_preferences(session['user_id'])
     if not prefs:
-        return redirect(url_for("complete_profile"))
+        return redirect(url_for("onboarding_location"))
 
     location = prefs["location"]
     user_prefs = prefs["preferences"]
@@ -305,11 +299,21 @@ def for_you():
     social_events = [e for e in all_events if e.get('type') == 'social']
 
     def pick_events(events):
+        if not events:
+            return []
+        
         events.sort(key=score_event, reverse=True)
         top_count = max(1, int(len(events) * 0.7))
         top_events = events[:top_count]
         random_events = events[top_count:]
-        return top_events + random.sample(random_events, min(len(random_events), len(events) - top_count))
+        
+        # Only sample if there are random events to sample from
+        if random_events:
+            sample_size = min(len(random_events), len(events) - top_count)
+            if sample_size > 0:
+                return top_events + random.sample(random_events, sample_size)
+        
+        return top_events
 
     import random
     final_events = []
