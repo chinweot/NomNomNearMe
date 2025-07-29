@@ -86,7 +86,7 @@ def signup():
 
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
-            session['user_id'] = MOCK_USER_ID
+            session['user_id'] = MOCK_USER_ID 
             return redirect(url_for('onboarding_location'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
@@ -117,7 +117,12 @@ def onboarding_interests():
     if request.method == 'POST':
         interests = request.form.get('interests', '').strip()
         if interests:
-            session['user_interests'] = interests
+            # Get location from session
+            location = session.get('user_location', '')
+            # Convert interests string to list (comma-separated)
+            interests_list = [interest.strip() for interest in interests.split(',') if interest.strip()]
+            # Save to database
+            db.save_user_preferences(session['user_id'], location, interests_list)
             return redirect(url_for('for_you'))
     
     return render_template("onboarding_interests.html")
@@ -152,73 +157,12 @@ def search():
         session['user_id'] = MOCK_USER_ID # TEMPORARY
     return render_template("search.html")
 
+#@app.route("/for_you")
+#def for_you():
+#    if 'user_id' not in session:
+#        session['user_id'] = MOCK_USER_ID # TEMPORARY
+#    return render_template("for_you.html")
 
-
-@app.route("/for_you")
-def for_you():
-    if 'user_id' not in session:
-        session['user_id'] = MOCK_USER_ID # TEMPORARY
-    location = session.get('user_location', 'New York')
-    # Get user events and use Gemini to tag
-    user_events = get_user_events()
-    for ue in user_events:
-        title = ue.get('title', '')
-        desc = ''
-        # Only tag if not already tagged
-        tag = ue.get('tag')
-        if not tag or tag == 'other':
-            tag = gemini_tag(title, desc)
-        ue['tag'] = tag
-        ue['source'] = 'user'
-        ue['title'] = title
-        ue['date'] = ue.get('event_time', '')
-        ue['description'] = desc
-        ue['address'] = ue.get('location', '')
-        ue['link'] = ''
-        ue['image'] = '/static/img/logo.png'  # Placeholder or user-uploaded image if available
-
-    # Get Google events and add a tag (try to infer from description/title)
-    try:
-        google_events = get_google_events(location)
-    except Exception as e:
-        print(f"Error fetching Google events: {e}")
-        google_events = []
-    for ge in google_events:
-        title = ge.get('title', '')
-        desc = ge.get('description', '')
-        # Only tag if not already tagged
-        tag = ge.get('tag')
-        if not tag or tag == 'other':
-            tag = gemini_tag(title, desc)
-        ge['tag'] = tag
-        ge['source'] = 'google'
-        # Flatten date field
-        date_val = ge.get('date', '')
-        if isinstance(date_val, dict):
-            ge['date'] = date_val.get('when') or date_val.get('start_date') or ''
-        else:
-            ge['date'] = str(date_val)
-        # Flatten address field
-        addr_val = ge.get('address', '')
-        if isinstance(addr_val, list):
-            ge['address'] = ', '.join(addr_val)
-        else:
-            ge['address'] = str(addr_val)
-        ge['description'] = desc
-        ge['link'] = ge.get('link', ge.get('event_url', ''))
-        # Use thumbnail or image if available
-        ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
-
-    # Blend and sort events (by date if possible)
-    all_events = user_events + google_events
-    def event_sort_key(ev):
-        # Always return a string for sorting, fallback to empty string if date missing
-        date_val = ev.get('date', '')
-        if date_val is None:
-            return ''
-        return str(date_val)
-    all_events.sort(key=event_sort_key)
-    return render_template("for_you.html", events=all_events)
 
 @app.route('/about')
 def about():
@@ -265,7 +209,7 @@ def api_saved_events():
     user_id = MOCK_USER_ID
     if not user_id:
         return jsonify({'message': 'User not logged in'}), 401
-    saved_events = db.get_saved_events(user_id) # Assuming db.get_saved_events exists
+    saved_events = db.get_saved_events(user_id) 
     return jsonify({'events': saved_events})
 
 # ---------- FETCH API DATA ----------
@@ -287,7 +231,121 @@ def api_events():
     except Exception as e:
         print(f"Error in api_events: {e}")
         return jsonify({"error" : str(e)}), 502
+    
+#------------- USERS PREFERENCES AND LOCATION ----------
+
+
+@app.route("/for_you")
+def for_you():
+    if 'user_id' not in session:
+        return redirect(url_for("home"))
+
+    prefs = db.get_user_preferences(session['user_id'])
+    if not prefs:
+        return redirect(url_for("onboarding_location"))
+
+    location = prefs["location"]
+    user_prefs = prefs["preferences"]
+
+    # fetch and tag user events TEMPORARY
+    user_events = get_user_events()
+    for ue in user_events:
+        title = ue.get('title', '')
+        desc = ''
+        tag = gemini_tag(title, desc)
+        ue['tag'] = tag
+        ue['source'] = 'user'
+        ue['title'] = title
+        ue['date'] = ue.get('event_time', '')
+        ue['description'] = desc
+        ue['address'] = ue.get('location', '')
+        ue['link'] = ''
+        ue['image'] = '/static/img/logo.png'
+
+    # Fetch and tag api events
+    try:
+        google_events = get_google_events(location)
+    except Exception as e:
+        print(f"Error fetching Google events: {e}")
+        google_events = []
+
+    for ge in google_events:
+        title = ge.get('title', '')
+        desc = ge.get('description', '')
+        tag = gemini_tag(title, desc)
+        ge['tag'] = tag
+        ge['source'] = 'google'
+
+        date_val = ge.get('date', '')
+        ge['date'] = date_val.get('when') if isinstance(date_val, dict) else str(date_val)
+        ge['address'] = ', '.join(ge.get('address', [])) if isinstance(ge.get('address', ''), list) else ge.get('address', '')
+        ge['description'] = desc
+        ge['link'] = ge.get('link', ge.get('event_url', ''))
+        ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
+
+    # Combine
+    all_events = user_events + google_events
+
+    # Score based on prefs
+    def score_event(event):
+        score = 0
+        tags = event.get('tag', '').split(",") 
+        for tag in tags:
+            tag = tag.strip().lower()
+            score += user_prefs.get(tag, 0)
+        return score
+
+    food_events = [e for e in all_events if e.get('type') == 'food']
+    social_events = [e for e in all_events if e.get('type') == 'social']
+
+    def pick_events(events):
+        if not events:
+            return []
         
+        events.sort(key=score_event, reverse=True)
+        top_count = max(1, int(len(events) * 0.7))
+        top_events = events[:top_count]
+        random_events = events[top_count:]
+        
+        # Only sample if there are random events to sample from
+        if random_events:
+            sample_size = min(len(random_events), len(events) - top_count)
+            if sample_size > 0:
+                return top_events + random.sample(random_events, sample_size)
+        
+        return top_events
+
+    import random
+    final_events = []
+    max_len = max(len(food_events), len(social_events))
+
+    for i in range(max_len):
+        if i < len(food_events):
+            final_events.append(food_events[i])
+        if i < len(social_events):
+            final_events.append(social_events[i])
+
+    final_events = pick_events(final_events)
+
+    return render_template("for_you.html", events=final_events, preferences=prefs)
+
+@app.route('/api/like_event', methods=['POST'])
+def api_like_event():
+    if 'user_id' not in session:
+        return jsonify({"status": "fail", "message": "User not logged in."}), 401
+
+    user_id = session['user_id']
+    data = request.json
+
+    event_global_id = data.get('global_id')
+    tags = data.get('tags', [])
+
+    if not event_global_id or not tags:
+        return jsonify({"status": "fail", "message": "Event ID and tags are required."}), 400
+
+    result = db.like_event(user_id, event_global_id, tags)
+    return jsonify(result)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
