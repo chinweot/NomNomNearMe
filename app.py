@@ -5,14 +5,18 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
+
 import db
+import math
+from dotenv import load_dotenv
+import os
 
 
+load_dotenv()  
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'Wnv1I6Tsd7'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'Wnv1I6Tsd7')
 
 # Configure Gemini API
-import os
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
@@ -50,10 +54,16 @@ def post_event():
         location = request.form.get("location", "").strip()
         event_time = request.form.get("event_time", "").strip()
         timezone = request.form.get("timezone", "").strip()
-        description = request.form.get("description", "").strip() 
-        if not (title and location and event_time and timezone):
+        tag = request.form.get("tag", "other").strip().lower()  # New: get tag from form
+        description = request.form.get("description", "").strip()  # Optionally get description
+        if not (title and location and event_time and timezone and tag):
             return render_template("post_event.html", error="All fields are required.")
-        add_user_event(title, location, event_time, timezone, description)
+        # Pass tag to add_user_event if supported, else store in description for now
+        try:
+            add_user_event(title, location, event_time, timezone, tag, description)
+        except TypeError:
+            # Fallback for legacy add_user_event signature
+            add_user_event(title, location, event_time, timezone)
         return redirect(url_for("user_events"))
     return render_template("post_event.html")
 
@@ -114,18 +124,15 @@ def onboarding_location():
 def onboarding_interests():
     if 'user_id' not in session:
         return redirect(url_for('home'))
-    
+
     if request.method == 'POST':
-        interests = request.form.get('interests', '').strip()
-        if interests:
-            # Get location from session
+        # Get multiple selected interests from the multi-select dropdown
+        interests_list = request.form.getlist('interests')
+        if interests_list:
             location = session.get('user_location', '')
-            # Convert interests string to list (comma-separated)
-            interests_list = [interest.strip() for interest in interests.split(',') if interest.strip()]
-            # Save to database
             db.save_user_preferences(session['user_id'], location, interests_list)
             return redirect(url_for('for_you'))
-    
+
     return render_template("onboarding_interests.html")
 
 # --- LOGIN PAGE 
@@ -248,20 +255,57 @@ def for_you():
     location = prefs["location"]
     user_prefs = prefs["preferences"]
 
-    # fetch and tag user events TEMPORARY
+    # fetch user events and use stored tag/description, filter by user city
     user_events = get_user_events()
+    # City to (lat, lon) lookup for major US cities
+    city_coords = {
+        'new york': (40.7128, -74.0060),
+        'los angeles': (34.0522, -118.2437),
+        'chicago': (41.8781, -87.6298),
+        'houston': (29.7604, -95.3698),
+        'phoenix': (33.4484, -112.0740),
+        'philadelphia': (39.9526, -75.1652),
+        'san antonio': (29.4241, -98.4936),
+        'san diego': (32.7157, -117.1611),
+        'dallas': (32.7767, -96.7970),
+        'san jose': (37.3382, -121.8863)
+    }
+
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 3958.8  # Earth radius in miles
+        phi1, phi2 = math.radians(lat1), math.radians(lat2)
+        dphi = math.radians(lat2 - lat1)
+        dlambda = math.radians(lon2 - lon1)
+        a = math.sin(dphi/2)**2 + math.cos(phi1)*math.cos(phi2)*math.sin(dlambda/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+
+    user_city = None
+    user_latlon = None
+    if location:
+        user_city = location.split(',')[0].strip().lower()
+        user_latlon = city_coords.get(user_city)
+
+    filtered_user_events = []
     for ue in user_events:
-        title = ue.get('title', '')
-        desc = ''
-        tag = gemini_tag(title, desc)
-        ue['tag'] = tag
+        event_city = ue.get('location', '').split(',')[-1].strip().lower() if ',' in ue.get('location', '') else ue.get('location', '').strip().lower()
+        event_latlon = city_coords.get(event_city)
+        # If both user and event have coordinates, filter by distance (<= 50 miles)
+        if user_latlon and event_latlon:
+            dist = haversine(user_latlon[0], user_latlon[1], event_latlon[0], event_latlon[1])
+            if dist > 50:
+                continue
+        elif user_city and user_city not in event_city:
+            continue
+        ue['tag'] = ue.get('tag', 'other')
         ue['source'] = 'user'
-        ue['title'] = title
+        ue['title'] = ue.get('title', '')
         ue['date'] = ue.get('event_time', '')
-        ue['description'] = desc
+        ue['description'] = ue.get('description', '')
         ue['address'] = ue.get('location', '')
         ue['link'] = ''
         ue['image'] = '/static/img/logo.png'
+        filtered_user_events.append(ue)
 
     # Fetch and tag api events
     try:
@@ -282,53 +326,126 @@ def for_you():
         ge['address'] = ', '.join(ge.get('address', [])) if isinstance(ge.get('address', ''), list) else ge.get('address', '')
         ge['description'] = desc
         ge['link'] = ge.get('link', ge.get('event_url', ''))
-        ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
-
-    # Combine
-    all_events = user_events + google_events
-
-    # Score based on prefs
-    def score_event(event):
-        score = 0
-        tags = event.get('tag', '').split(",") 
-        for tag in tags:
-            tag = tag.strip().lower()
-            score += user_prefs.get(tag, 0)
-        return score
-
-    food_events = [e for e in all_events if e.get('type') == 'food']
-    social_events = [e for e in all_events if e.get('type') == 'social']
-
-    def pick_events(events):
-        if not events:
-            return []
         
-        events.sort(key=score_event, reverse=True)
-        top_count = max(1, int(len(events) * 0.7))
-        top_events = events[:top_count]
-        random_events = events[top_count:]
+        # Try to get the best quality image available with multiple fallbacks
+        image = None
         
-        # Only sample if there are random events to sample from
-        if random_events:
-            sample_size = min(len(random_events), len(events) - top_count)
-            if sample_size > 0:
-                return top_events + random.sample(random_events, sample_size)
+        # Try multiple image fields in order of preference
+        for img_field in ['image', 'photo', 'picture', 'thumbnail', 'banner']:
+            if ge.get(img_field):
+                image = ge.get(img_field)
+                break
         
-        return top_events
+        if image:
+            # Try to get higher resolution version if it's a Google image
+            if 'googleusercontent.com' in str(image):
+                # Try multiple resolution attempts
+                original_image = str(image)
+                # First attempt: very high resolution
+                image = original_image.replace('=w120-h120-p', '=w2000-h1200-p')
+                image = image.replace('=s120', '=s2000')
+                image = image.replace('=w120', '=w2000')
+                image = image.replace('=h120', '=h1200')
+                image = image.replace('=w120-h120', '=w2000-h1200')
+                image = image.replace('=s120-c', '=s2000-c')
+                # Remove any remaining size restrictions
+                image = image.replace('=w120', '=w2000')
+                image = image.replace('=h120', '=h1200')
+                image = image.replace('=s120', '=s2000')
+            elif 'lh3.googleusercontent.com' in str(image):
+                # For Google Photos, try to get original size
+                image = str(image).replace('=s120', '=s0')
+                image = str(image).replace('=w120', '=w0')
+                image = str(image).replace('=h120', '=h0')
+            elif 'maps.googleapis.com' in str(image):
+                # For Google Maps images, try to get higher resolution
+                image = str(image).replace('size=120x120', 'size=1200x800')
+                image = str(image).replace('zoom=15', 'zoom=18')
+            
+            ge['image'] = image
+        else:
+            # If no image found, try to generate a placeholder based on event type
+            if 'music' in tag.lower() or 'concert' in title.lower():
+                ge['image'] = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=800&fit=crop&q=90'
+            elif 'food' in tag.lower() or 'restaurant' in title.lower():
+                ge['image'] = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
+            elif 'sport' in tag.lower() or 'fitness' in title.lower():
+                ge['image'] = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop&q=90'
+            else:
+                ge['image'] = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
 
+    # Combine all events (only user events in user's city)
+    all_events = filtered_user_events + google_events
+
+    # --- BATCHING LOGIC: 5 events per batch, 70% from liked tags (weighted), 30% from unliked tags ---
     import random
-    final_events = []
-    max_len = max(len(food_events), len(social_events))
+    BATCH_SIZE = 5
+    LIKE_RATIO = 0.7
+    batch_num = int(request.args.get('batch', 1))
+    user_liked_tags = {tag: count for tag, count in user_prefs.items() if count > 0}
+    unliked_tags = set([e.get('tag', 'other') for e in all_events]) - set(user_liked_tags.keys())
 
-    for i in range(max_len):
-        if i < len(food_events):
-            final_events.append(food_events[i])
-        if i < len(social_events):
-            final_events.append(social_events[i])
+    # Partition events by tag
+    tag_to_events = {}
+    for event in all_events:
+        tag = event.get('tag', 'other')
+        tag_to_events.setdefault(tag, []).append(event)
 
-    final_events = pick_events(final_events)
+    # Calculate how many liked/unliked events per batch
+    num_liked = round(BATCH_SIZE * LIKE_RATIO)
+    num_unliked = BATCH_SIZE - num_liked
 
-    return render_template("for_you.html", events=final_events, preferences=prefs)
+    # Weighted selection for liked tags
+    liked_tag_total = sum(user_liked_tags.values())
+    liked_tag_weights = {tag: (count / liked_tag_total) if liked_tag_total > 0 else 0 for tag, count in user_liked_tags.items()}
+
+    # Flatten all events in a deterministic order for batching
+    all_batch_events = []
+    used_indices = set()
+    total_batches = 0
+    while True:
+        liked_events = []
+        liked_tags = list(user_liked_tags.keys())
+        for _ in range(num_liked):
+            if not liked_tags:
+                break
+            tag = random.choices(liked_tags, weights=[liked_tag_weights[t] for t in liked_tags], k=1)[0]
+            if tag_to_events.get(tag):
+                liked_events.append(tag_to_events[tag].pop(0))
+            else:
+                liked_tags.remove(tag)
+        unliked_events = []
+        unliked_tags_list = list(unliked_tags)
+        random.shuffle(unliked_tags_list)
+        for tag in unliked_tags_list:
+            if tag_to_events.get(tag):
+                unliked_events.append(tag_to_events[tag].pop(0))
+            if len(unliked_events) >= num_unliked:
+                break
+        batch_events = liked_events + unliked_events
+        if len(batch_events) < BATCH_SIZE:
+            remaining = []
+            for evs in tag_to_events.values():
+                remaining.extend(evs)
+            random.shuffle(remaining)
+            batch_events += remaining[:BATCH_SIZE - len(batch_events)]
+        if not batch_events:
+            break
+        random.shuffle(batch_events)
+        all_batch_events.extend(batch_events)
+        total_batches += 1
+        if sum(len(evs) for evs in tag_to_events.values()) == 0:
+            break
+
+    # Serve the correct batch
+    start_idx = (batch_num - 1) * BATCH_SIZE
+    end_idx = start_idx + BATCH_SIZE
+    batch_to_show = all_batch_events[start_idx:end_idx]
+
+    # For frontend: let it know if more batches exist
+    more_batches = end_idx < len(all_batch_events)
+
+    return render_template("for_you.html", events=batch_to_show, preferences=prefs, batch=batch_num, more_batches=more_batches)
 
 @app.route('/api/like_event', methods=['POST'])
 def api_like_event():

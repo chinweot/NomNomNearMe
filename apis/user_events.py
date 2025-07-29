@@ -17,6 +17,7 @@ def init_user_events_db():
             location TEXT NOT NULL,
             event_time TEXT NOT NULL,
             timezone TEXT NOT NULL,
+            tag TEXT,
             description TEXT,
             created_at TEXT NOT NULL
         )
@@ -24,13 +25,13 @@ def init_user_events_db():
     conn.commit()
     conn.close()
 
-def add_user_event(title, location, event_time, timezone, description=""):
+def add_user_event(title, location, event_time, timezone, tag=None, description=""):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-        INSERT INTO user_events (title, location, event_time, timezone, description, created_at)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (title, location, event_time, timezone, description, datetime.utcnow().isoformat()))
+        INSERT INTO user_events (title, location, event_time, timezone, tag, description, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (title, location, event_time, timezone, tag, description, datetime.utcnow().isoformat()))
     conn.commit()
     conn.close()
 
@@ -53,7 +54,7 @@ def format_created_at(created_at_str):
 def get_user_events():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    c.execute('SELECT id, title, location, event_time, timezone, description, created_at FROM user_events ORDER BY event_time ASC')
+    c.execute('SELECT id, title, location, event_time, timezone, tag, description, created_at FROM user_events ORDER BY event_time ASC')
     events = c.fetchall()
     conn.close()
     return [
@@ -63,8 +64,9 @@ def get_user_events():
             "location": row[2],
             "event_time": format_event_time(row[3]),
             "timezone": row[4],
-            "description": row[5],
-            "created_at": format_created_at(row[6])
+            "tag": row[5],
+            "description": row[6],
+            "created_at": format_created_at(row[7])
         }
         for row in events
     ]
