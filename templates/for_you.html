@@ -42,6 +42,8 @@
         .video-container {
             width: 100%;
             height: 100%;
+            max-width: 800px;
+            max-height: 600px;
             position: relative;
             background: #000;
             border-radius: 16px;
@@ -65,29 +67,26 @@
         }
         
         .event-image {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
             object-fit: cover;
             border-radius: 16px;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
+            image-rendering: auto;
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
-            transform: translateZ(0);
-            -webkit-transform: translateZ(0);
-            will-change: transform;
         }
         
         /* Add loading state for images */
         .event-image.loading {
             opacity: 0.7;
-            filter: blur(2px);
+            /* No blur, just lower opacity for loading */
         }
         
         .event-image.loaded {
             opacity: 1;
-            filter: none;
-            transition: opacity 0.3s ease, filter 0.3s ease;
+            transition: opacity 0.3s ease;
         }
         
         /* Add high-quality image fallback */
@@ -242,8 +241,10 @@
                     <div class="event-card {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
                         <div class="video-container">
                             <img src="{{ event.image }}" 
+                            <img src="{{ event.image|upscale_google_img }}" 
                                  alt="{{ event.title }}" 
                                  class="event-image loading"
+                                 loading="lazy"
                                  onload="this.classList.remove('loading'); this.classList.add('loaded')"
                                  onerror="handleImageError(this, '{{ event.title }}')">
                             <div class="event-overlay">
