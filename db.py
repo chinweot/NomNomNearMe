@@ -44,6 +44,18 @@ def init_auth_db():
         )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS liked_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        event_global_id TEXT NOT NULL,
+        liked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, event_global_id),
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    )
+""")
+
+
     conn.commit()
     conn.close()
 
@@ -204,6 +216,13 @@ def like_event(user_id, event_global_id, tags):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
+    # Check if already liked
+    cursor.execute("""
+        SELECT 1 FROM liked_events
+        WHERE user_id = ? AND event_global_id = ?
+    """, (user_id, event_global_id))
+    already_liked = cursor.fetchone()
+
     cursor.execute("SELECT preferences FROM user_preferences WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
     preferences = json.loads(row[0]) if row else {}
@@ -213,10 +232,31 @@ def like_event(user_id, event_global_id, tags):
     else:
         tags = [t.strip().lower() for t in tags]
 
-    # Update weights
-    for tag in tags:
-        if tag:
-            preferences[tag] = preferences.get(tag, 0) + 1
+    if already_liked:
+        # UNLIKE
+        cursor.execute("""
+            DELETE FROM liked_events
+            WHERE user_id = ? AND event_global_id = ?
+        """, (user_id, event_global_id))
+
+        for tag in tags:
+            if tag in preferences:
+                preferences[tag] = max(0, preferences[tag] - 1)  # don't go below 0
+
+        result = {"status": "success", "message": "Event unliked."}
+
+    else:
+        # LIKE 
+        cursor.execute("""
+            INSERT INTO liked_events (user_id, event_global_id)
+            VALUES (?, ?)
+        """, (user_id, event_global_id))
+
+        for tag in tags:
+            if tag:
+                preferences[tag] = preferences.get(tag, 0) + 1
+
+        result = {"status": "success", "message": "Event liked."}
 
     preferences_json = json.dumps(preferences)
     cursor.execute("""
@@ -227,6 +267,7 @@ def like_event(user_id, event_global_id, tags):
 
     conn.commit()
     conn.close()
+    return result
 
 
 if __name__ == "__main__":

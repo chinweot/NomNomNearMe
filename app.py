@@ -233,32 +233,28 @@ def for_you():
         ge['link'] = ge.get('link', ge.get('event_url', ''))
         ge['image'] = ge.get('thumbnail') or ge.get('image') or '/static/img/logo.png'
 
-    # -------- Combine all events --------
+    # Combine
     all_events = user_events + google_events
 
     # -------- Score events based on user prefs --------
     def score_event(event):
         score = 0
-        tags = event.get('tag', '').split(",")  # assuming gemini_tag returns comma-separated tags
+        tags = event.get('tag', '').split(",") 
         for tag in tags:
             tag = tag.strip().lower()
             score += user_prefs.get(tag, 0)
         return score
 
-    # Separate food vs social for fairness
     food_events = [e for e in all_events if e.get('type') == 'food']
     social_events = [e for e in all_events if e.get('type') == 'social']
 
     def pick_events(events):
-        # Sort by score descending
         events.sort(key=score_event, reverse=True)
-        # 70% top matches, 30% random variety
         top_count = max(1, int(len(events) * 0.7))
         top_events = events[:top_count]
         random_events = events[top_count:]
         return top_events + random.sample(random_events, min(len(random_events), len(events) - top_count))
 
-    # Merge balanced sets
     import random
     final_events = []
     max_len = max(len(food_events), len(social_events))
@@ -269,12 +265,27 @@ def for_you():
         if i < len(social_events):
             final_events.append(social_events[i])
 
-    # Apply diversity picking on combined list
     final_events = pick_events(final_events)
 
     return render_template("for_you.html", events=final_events, preferences=prefs)
 
-        
+@app.route('/api/like_event', methods=['POST'])
+def api_like_event():
+    if 'user_id' not in session:
+        return jsonify({"status": "fail", "message": "User not logged in."}), 401
+
+    user_id = session['user_id']
+    data = request.json
+
+    event_global_id = data.get('global_id')
+    tags = data.get('tags', [])
+
+    if not event_global_id or not tags:
+        return jsonify({"status": "fail", "message": "Event ID and tags are required."}), 400
+
+    result = db.like_event(user_id, event_global_id, tags)
+    return jsonify(result)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
