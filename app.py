@@ -164,7 +164,10 @@ def for_you():
     for ue in user_events:
         title = ue.get('title', '')
         desc = ''
-        tag = gemini_tag(title, desc)
+        # Only tag if not already tagged
+        tag = ue.get('tag')
+        if not tag or tag == 'other':
+            tag = gemini_tag(title, desc)
         ue['tag'] = tag
         ue['source'] = 'user'
         ue['title'] = title
@@ -183,7 +186,10 @@ def for_you():
     for ge in google_events:
         title = ge.get('title', '')
         desc = ge.get('description', '')
-        tag = gemini_tag(title, desc)
+        # Only tag if not already tagged
+        tag = ge.get('tag')
+        if not tag or tag == 'other':
+            tag = gemini_tag(title, desc)
         ge['tag'] = tag
         ge['source'] = 'google'
         # Flatten date field
