@@ -60,12 +60,40 @@ def signup():
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
             session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('home'))
+            return redirect(url_for('onboarding_location'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
             error_message = result['message']  # Capture the error message
 
     return render_template("signup.html", form=form, error_message=error_message)
+
+# ---------- ONBOARDING FLOW ----------
+
+@app.route("/onboarding/location", methods=['GET', 'POST'])
+def onboarding_location():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        location = request.form.get('location', '').strip()
+        if location:
+            session['user_location'] = location
+            return redirect(url_for('onboarding_interests'))
+    
+    return render_template("onboarding_location.html")
+
+@app.route("/onboarding/interests", methods=['GET', 'POST'])
+def onboarding_interests():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+    
+    if request.method == 'POST':
+        interests = request.form.get('interests', '').strip()
+        if interests:
+            session['user_interests'] = interests
+            return redirect(url_for('for_you'))
+    
+    return render_template("onboarding_interests.html")
 
 # --- LOGIN PAGE 
 
@@ -82,7 +110,7 @@ def home():
 
         if result["status"] == "access granted":
             session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('search')) 
+            return redirect(url_for('for_you')) 
         else:
             print(f"LOGIN FAILED WITH STATUS {result['status']}")
             # No redirect, stay on the login page to show error

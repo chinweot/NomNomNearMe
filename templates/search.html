@@ -22,11 +22,11 @@
                 </div>
                 <nav class="flex items-center space-x-6">
                     <a href="{{ url_for('post_event') }}" class="bg-orange-500 text-white px-3 py-1 rounded hover:bg-orange-600 transition"> Post Free Event</a>
-                    <a href="{{ url_for('for_you') }}" class="text-gray-600 hover:text-orange-500">For You</a>
-                    <a href="{{ url_for('user_events') }}" class="text-gray-600 hover:text-orange-500">Free Events</a>
-                    <a href="{{ url_for('search') }}" class="text-gray-600 hover:text-orange-500">Home</a>
-                    <a href="{{ url_for('about') }}" class="text-gray-600 hover:text-orange-500">About</a>
-                    <a href= "{{ url_for('home') }}" class="text-gray-600 hover:text-red-500 font-medium">Logout</a>
+                    <a href="{{ url_for('for_you') }}" class="nav-link text-gray-600 hover:text-orange-500">For You</a>
+                    <a href="{{ url_for('user_events') }}" class="nav-link text-gray-600 hover:text-orange-500">Free Events</a>
+                    <a href="{{ url_for('search') }}" class="nav-link text-gray-600 hover:text-orange-500">Search</a>
+                    <a href="{{ url_for('about') }}" class="nav-link text-gray-600 hover:text-orange-500">About</a>
+                    <a href= "{{ url_for('home') }}" class="nav-link text-gray-600 hover:text-red-500 font-medium">Logout</a>
                 </nav>
             </div>
         </header>
@@ -47,16 +47,16 @@
             </div>
 
             <!-- Dynamic Heading -->
-            <h1 id="pageHeading" class="text-3xl font-bold text-center mb-8">Find Delicious Food Near You</h1>
+            <h1 id="pageHeading" class="floating text-3xl font-bold text-center mb-8">Find Delicious Food Near You</h1>
 
             <!-- Food Search Section -->
             <div id="foodSection" class="search-section">
-                <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10">
+                <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10 card-hover">
                     <div class="p-6">
                         <h2 class="text-xl font-semibold mb-4">Search Nearby Food</h2>
 
                         <div class="space-y-4">
-                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                            <div class="input-container flex items-center border rounded-lg p-3 bg-gray-50">
                                 <span class="text-xl mr-2">📍</span>
                                 <div class="flex-grow">
                                     <label class="block text-sm text-gray-600 mb-1">Location</label>
@@ -64,7 +64,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                            <div class="input-container flex items-center border rounded-lg p-3 bg-gray-50">
                                 <span class="text-xl mr-2">🔍</span>
                                 <div class="flex-grow">
                                     <label class="block text-sm text-gray-600 mb-1">Food Preferences</label>
@@ -72,7 +72,7 @@
                                 </div>
                             </div>
 
-                            <button id="foodSearchButton" class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
+                            <button id="foodSearchButton" class="search-button w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
                                 Search Food
                             </button>
                         </div>
@@ -82,12 +82,12 @@
 
             <!-- Events Search Section -->
             <div id="eventsSection" class="search-section hidden">
-                <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10">
+                <div class="bg-white max-w-3xl mx-auto rounded-xl shadow-lg overflow-hidden mb-10 card-hover">
                     <div class="p-6">
                         <h2 class="text-xl font-semibold mb-4">Search Free Events</h2>
 
                         <div class="space-y-4">
-                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                            <div class="input-container flex items-center border rounded-lg p-3 bg-gray-50">
                                 <span class="text-xl mr-2">📍</span>
                                 <div class="flex-grow">
                                     <label class="block text-sm text-gray-600 mb-1">Location</label>
@@ -95,7 +95,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center border rounded-lg p-3 bg-gray-50">
+                            <div class="input-container flex items-center border rounded-lg p-3 bg-gray-50">
                                 <span class="text-xl mr-2">🔍</span>
                                 <div class="flex-grow">
                                     <label class="block text-sm text-gray-600 mb-1">Event Type</label>
@@ -103,7 +103,7 @@
                                 </div>
                             </div>
 
-                            <button id="eventsSearchButton" class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
+                            <button id="eventsSearchButton" class="search-button w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700">
                                 Search Events
                             </button>
                         </div>

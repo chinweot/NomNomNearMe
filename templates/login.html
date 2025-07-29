@@ -14,13 +14,12 @@
   </head>
 
   <body class="bg-gray-100 font-poppins min-h-screen flex items-center justify-center">
-    <main class="flex flex-col md:flex-row max-w-6xl bg-white rounded-xl shadow-lg overflow-hidden w-full mx-4">
+    <main class="card-hover flex flex-col md:flex-row max-w-6xl bg-white rounded-xl shadow-lg overflow-hidden w-full mx-4">
 
       <section class="md:w-1/2 p-10 flex flex-col justify-center items-center">
         <img
           src="{{ url_for('static', filename='img/logo.png') }}"
           alt="Nom Nom Near Me logo"
-          class="mb-8 w-20 h-20 object-contain"
         />
         <h1 class="text-3xl font-bold text-orange-500 mb-8 text-center">Nom Nom Near Me</h1>
 
@@ -34,12 +33,12 @@
           {% endif %}
         {% endwith %}
 
-        <form method="post" class="w-full max-w-md space-y-6"> {# action="#" is removed, form submits to current URL #}
-          {{ form.csrf_token }} {# IMPORTANT: CSRF token #}
+        <form method="post" class="w-full max-w-md space-y-6">
+          {{ form.csrf_token }}
 
-          <div>
+          <div class="input-container">
             <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-            {{ form.username(type="text", id="username", class="mt-1 block w-full rounded-md border border-gray-300 p-3 focus:border-orange-500 focus:ring-orange-500", placeholder="Username", required=True) }}
+            {{ form.username(type="text", id="username", class="mt-1 block w-full rounded-md border border-gray-300 p-3 bg-gray-50 focus:outline-none transition-all", placeholder="Username", required=True) }}
             {% if form.username.errors %}
               {% for error in form.username.errors %}
                 <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -47,9 +46,9 @@
             {% endif %}
           </div>
 
-          <div>
+          <div class="input-container">
             <label for="password" class="block text-sm font-medium text-gray-700">{{ form.password.label }}</label>
-            {{ form.password(type="password", id="password", class="mt-1 block w-full rounded-md border border-gray-300 p-3 focus:border-orange-500 focus:ring-orange-500", placeholder="Password", required=True) }}
+            {{ form.password(type="password", id="password", class="mt-1 block w-full rounded-md border border-gray-300 p-3 bg-gray-50 focus:outline-none transition-all", placeholder="Password", required=True) }}
             {% if form.password.errors %}
               {% for error in form.password.errors %}
                 <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -59,12 +58,12 @@
 
           <div class="flex items-center justify-start">
             <label class="flex items-center text-sm text-gray-700">
-              {{ form.remember(class="mr-2", id="remember") }} {# Ensure id is set for label 'for' attribute #}
+              {{ form.remember(class="mr-2", id="remember") }}
               {{ form.remember.label }}
             </label>
           </div>
 
-          {{ form.submit(class="w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700") }}
+          {{ form.submit(class="search-button w-full bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 text-white font-semibold py-3 rounded-md transition-all hover:from-orange-500 hover:to-orange-700") }}
         </form>
 
         <p class="mt-6 text-center text-sm text-gray-600">
@@ -80,7 +79,5 @@
         />
       </section>
     </main>
-
-    {# REMOVED THE JAVASCRIPT BLOCK. Flask and WTForms will handle the submission. #}
   </body>
 </html>
