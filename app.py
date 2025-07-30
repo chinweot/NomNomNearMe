@@ -465,15 +465,12 @@ def api_like_event():
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
 
     user_id = session['user_id']
-    data = request.json
+    event_data = request.json
 
-    event_global_id = data.get('global_id')
-    tags = data.get('tags', [])
+    if not event_data.get('global_id'):
+        return jsonify({"status": "fail", "message": "Event data is required."}), 400
 
-    if not event_global_id or not tags:
-        return jsonify({"status": "fail", "message": "Event ID and tags are required."}), 400
-
-    result = db.like_event(user_id, event_global_id, tags)
+    result = db.like_event(user_id, event_data)
     return jsonify(result)
 
 @app.route('/api/liked_events', methods=['GET'])

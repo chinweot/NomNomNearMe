@@ -212,25 +212,28 @@ def get_user_preferences(user_id):
         return {"location": row[0], "preferences": json.loads(row[1])}
     return None
 
-def like_event(user_id, event_global_id, tags):
+def like_event(user_id, event_data):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Check if already liked
+    event_global_id = event_data.get('global_id')
+    tags = event_data.get('tags', [])
+    if isinstance(tags, str):
+        tags = [t.strip().lower() for t in tags.split(",")]
+    else:
+        tags = [t.strip().lower() for t in tags]
+
+    # Check if liked
     cursor.execute("""
         SELECT 1 FROM liked_events
         WHERE user_id = ? AND event_global_id = ?
     """, (user_id, event_global_id))
     already_liked = cursor.fetchone()
 
+    # Get prefs
     cursor.execute("SELECT preferences FROM user_preferences WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
     preferences = json.loads(row[0]) if row else {}
-
-    if isinstance(tags, str):
-        tags = [t.strip().lower() for t in tags.split(",")]
-    else:
-        tags = [t.strip().lower() for t in tags]
 
     if already_liked:
         # UNLIKE
@@ -241,16 +244,37 @@ def like_event(user_id, event_global_id, tags):
 
         for tag in tags:
             if tag in preferences:
-                preferences[tag] = max(0, preferences[tag] - 1)  # don't go below 0
+                preferences[tag] = max(0, preferences[tag] - 1)
 
         result = {"status": "success", "message": "Event unliked."}
 
     else:
-        # LIKE 
+        # LIKE
         cursor.execute("""
             INSERT INTO liked_events (user_id, event_global_id)
             VALUES (?, ?)
         """, (user_id, event_global_id))
+
+        # ensure event is saved
+        cursor.execute("""
+            SELECT 1 FROM saved_events WHERE event_global_id = ?
+        """, (event_global_id,))
+        exists_in_saved = cursor.fetchone()
+
+        if not exists_in_saved:
+            cursor.execute("""
+                INSERT INTO saved_events (user_id, event_global_id, event_source, event_title, event_date, event_location, event_url, type)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                user_id,
+                event_global_id,
+                event_data.get('source', 'unknown'),
+                event_data.get('title', 'No title'),
+                event_data.get('date', ''),
+                event_data.get('location', ''),
+                event_data.get('url', ''),
+                event_data.get('type', 'social')
+            ))
 
         for tag in tags:
             if tag:
