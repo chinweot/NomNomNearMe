@@ -54,6 +54,8 @@ def init_auth_db():
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     )
 """)
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    print(cursor.fetchall())
 
 
     conn.commit()
@@ -212,25 +214,32 @@ def get_user_preferences(user_id):
         return {"location": row[0], "preferences": json.loads(row[1])}
     return None
 
-def like_event(user_id, event_global_id, tags):
+def like_event(user_id, event_data):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Check if already liked
+    event_global_id = event_data.get('global_id')
+    tags = event_data.get('tags', [])
+    if isinstance(tags, str):
+        tags = [t.strip().lower() for t in tags.split(",")]
+    else:
+        tags = [t.strip().lower() for t in tags]
+
+    # Check if liked
     cursor.execute("""
         SELECT 1 FROM liked_events
         WHERE user_id = ? AND event_global_id = ?
     """, (user_id, event_global_id))
     already_liked = cursor.fetchone()
 
+    print(f"[DEBUG] Liking event: {event_data}")
+    print(f"[DEBUG] Already liked? {already_liked}")
+
+    # Get prefs
     cursor.execute("SELECT preferences FROM user_preferences WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
     preferences = json.loads(row[0]) if row else {}
-
-    if isinstance(tags, str):
-        tags = [t.strip().lower() for t in tags.split(",")]
-    else:
-        tags = [t.strip().lower() for t in tags]
+    print(f"[DEBUG] Preferences before update: {preferences}")
 
     if already_liked:
         # UNLIKE
@@ -241,16 +250,37 @@ def like_event(user_id, event_global_id, tags):
 
         for tag in tags:
             if tag in preferences:
-                preferences[tag] = max(0, preferences[tag] - 1)  # don't go below 0
+                preferences[tag] = max(0, preferences[tag] - 1)
 
         result = {"status": "success", "message": "Event unliked."}
 
     else:
-        # LIKE 
+        # LIKE
         cursor.execute("""
             INSERT INTO liked_events (user_id, event_global_id)
             VALUES (?, ?)
         """, (user_id, event_global_id))
+
+        # ensure event is saved
+        cursor.execute("""
+            SELECT 1 FROM saved_events WHERE event_global_id = ?
+        """, (event_global_id,))
+        exists_in_saved = cursor.fetchone()
+
+        if not exists_in_saved:
+            cursor.execute("""
+                INSERT INTO saved_events (user_id, event_global_id, event_source, event_title, event_date, event_location, event_url, type)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                user_id,
+                event_global_id,
+                event_data.get('source', 'unknown'),
+                event_data.get('title', 'No title'),
+                event_data.get('date', ''),
+                event_data.get('location', ''),
+                event_data.get('url', ''),
+                event_data.get('type', 'social')
+            ))
 
         for tag in tags:
             if tag:
@@ -265,6 +295,8 @@ def like_event(user_id, event_global_id, tags):
         WHERE user_id = ?
     """, (preferences_json, user_id))
 
+    print(f"[DEBUG] Preferences after update: {preferences}")
+
     conn.commit()
     conn.close()
     return result
@@ -272,6 +304,8 @@ def like_event(user_id, event_global_id, tags):
 def get_liked_events(user_id: int) -> list:
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
+
+    print(f"[DEBUG] Fetching liked events for user {user_id}")
 
     cursor.execute("""
         SELECT se.event_global_id, se.event_source, se.event_title, se.event_date, 
@@ -284,6 +318,8 @@ def get_liked_events(user_id: int) -> list:
     
     liked_events_raw = cursor.fetchall()
     conn.close()
+
+    print(f"[DEBUG] Raw rows: {liked_events_raw}")
 
     liked_events = []
     for row in liked_events_raw:
@@ -324,6 +360,23 @@ def get_events_posted_by_user(user_id: int) -> list:
         })
     
     return posted_events
+
+def get_user_info(user_id: int) -> dict:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT name, email
+        FROM users
+        WHERE id = ?
+    """, (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return {"name": row[0], "email": row[1]}
+    return None
+
 
 if __name__ == "__main__":
     init_auth_db()

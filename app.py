@@ -5,6 +5,7 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
+import sqlite3
 import re
 
 import db
@@ -465,15 +466,12 @@ def api_like_event():
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
 
     user_id = session['user_id']
-    data = request.json
+    event_data = request.json
 
-    event_global_id = data.get('global_id')
-    tags = data.get('tags', [])
+    if not event_data.get('global_id'):
+        return jsonify({"status": "fail", "message": "Event data is required."}), 400
 
-    if not event_global_id or not tags:
-        return jsonify({"status": "fail", "message": "Event ID and tags are required."}), 400
-
-    result = db.like_event(user_id, event_global_id, tags)
+    result = db.like_event(user_id, event_data)
     return jsonify(result)
 
 @app.route('/api/liked_events', methods=['GET'])
@@ -493,6 +491,37 @@ def api_posted_events():
     user_id = session['user_id']
     posted_events = db.get_events_posted_by_user(user_id)
     return jsonify({'status': 'success', 'events': posted_events}), 200
+
+@app.route("/account")
+def account():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+    
+    user_id = session['user_id']
+    
+    try:
+        # Get user basic info (name and email)
+        user_info = db.get_user_info(user_id)
+        username = user_info['name'] if user_info else 'User'
+        email = user_info['email'] if user_info else 'user@example.com'
+
+        
+        # Get liked events
+
+        liked_events = db.get_liked_events(user_id)
+
+        print(f"[DEBUG] Liked events returned: {liked_events}")
+        
+    except Exception as e:
+        print(f"Error in account route: {e}")
+        username = 'User'
+        email = 'user@example.com'
+        liked_events = []
+    
+    return render_template('account.html', 
+                         username=username,
+                         email=email,
+                         liked_events=liked_events)
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -222,6 +222,7 @@
                     <a href="{{ url_for('user_events') }}" class="nav-link text-gray-600 hover:text-orange-500">Free Events</a>
                     <a href="{{ url_for('search') }}" class="nav-link text-gray-600 hover:text-orange-500">Search</a>
                     <a href="{{ url_for('about') }}" class="nav-link text-gray-600 hover:text-orange-500">About</a>
+                    <a href="{{ url_for('account') }}" class="nav-link text-gray-600 hover:text-orange-500">Account</a>
                     <a href="{{ url_for('home') }}" class="nav-link text-gray-600 hover:text-red-500 font-medium">Logout</a>
                 </nav>
             </div>
@@ -260,7 +261,18 @@
                                 {% endif %}
                                 <div class="mt-2 text-xs opacity-75 flex items-center gap-2">
                                     Tag: {{ event.tag|capitalize }} | Source: {{ event.source|capitalize }}
-                                    <button class="like-btn ml-2" title="Like this event" onclick="likeEvent(this, '{{ event.global_id if event.global_id is defined else (event.id if event.id is defined else loop.index0) }}', '{{ event.tag }}')">
+                                    <button class="like-btn ml-2" title="Like this event"
+                                        data-id="{{ event.global_id if event.global_id is defined and event.global_id else 
+           (event.url if event.url else (event.title ~ '-' ~ event.date)) }}"
+                                        data-tag="{{ event.tag }}"
+                                        data-title="{{ event.title }}"
+                                        data-source="{{ event.source }}"
+                                        data-date="{{ event.date }}"
+                                        data-location="{{ event.address or event.location }}"
+                                        data-url="{{ event.link or event.url }}"
+                                        data-type="{{ event.type or 'social' }}"
+                                        onclick="likeEvent(this)">
+
                                         <svg class="w-6 h-6 heart-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path class="heart-outline" d="M12 21C12 21 4 13.5 4 8.5C4 5.42 6.42 3 9.5 3C11.24 3 12.91 4.01 13.44 5.61C13.97 4.01 15.64 3 17.5 3C20.58 3 23 5.42 23 8.5C23 13.5 15 21 12 21Z"/>
                                             <path class="heart-fill" d="M12 21C12 21 4 13.5 4 8.5C4 5.42 6.42 3 9.5 3C11.24 3 12.91 4.01 13.44 5.61C13.97 4.01 15.64 3 17.5 3C20.58 3 23 5.42 23 8.5C23 13.5 15 21 12 21Z" fill="none"/>
@@ -425,40 +437,60 @@
         }
 
         // Like functionality
-        function likeEvent(button, eventId, tag) {
+function likeEvent(button) {
+    const eventId = button.dataset.id;
+    const tag = button.dataset.tag;
+    const title = button.dataset.title;
+    const source = button.dataset.source;
+    const date = button.dataset.date;
+    const location = button.dataset.location;
+    const url = button.dataset.url;
+    const type = button.dataset.type;
+
+    if (!eventId) {
+        alert('Missing event ID.');
+        return;
+    }
+
+    button.classList.toggle('liked');
+    const svg = button.querySelector('.heart-icon');
+    const fillPath = svg.querySelector('.heart-fill');
+    fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
+
+    button.style.transform = 'scale(1.2)';
+    setTimeout(() => button.style.transform = 'scale(1)', 200);
+
+    fetch('/api/like_event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            global_id: eventId,
+            tags: [tag],
+            title,
+            source,
+            date,
+            location,
+            url,
+            type
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status !== 'success') {
             button.classList.toggle('liked');
-            const svg = button.querySelector('.heart-icon');
-            const fillPath = svg.querySelector('.heart-fill');
-            if (button.classList.contains('liked')) {
-                fillPath.setAttribute('fill', '#ef4444'); // Tailwind red-500
-            } else {
-                fillPath.setAttribute('fill', 'none');
-            }
-            button.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                button.style.transform = 'scale(1)';
-            }, 200);
-            // Send like/unlike to backend
-            fetch('/api/like_event', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ global_id: eventId, tags: [tag] })
-            })
-            .then(res => res.json())
-            .then(data => {
-                // Optionally show feedback
-                if (data.status !== 'success') {
-                    button.classList.toggle('liked'); // revert
-                    fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
-                    alert(data.message || 'Error liking event');
-                }
-            })
-            .catch(() => {
-                button.classList.toggle('liked'); // revert
-                fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
-                alert('Error liking event');
-            });
+            fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
+            alert(data.message || 'Error liking/unliking event');
         }
+    })
+    .catch(() => {
+        button.classList.toggle('liked');
+        fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
+        alert('Error liking/unliking event');
+    });
+}
+
+
+
 
     </script>
     <style>
