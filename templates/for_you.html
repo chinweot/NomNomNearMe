@@ -71,9 +71,9 @@
             height: 350px;
             max-width: 700px;
             object-fit: cover;
-            border-radius: 18px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18), 0 1.5px 6px rgba(249,115,22,0.08);
-            border: 2.5px solid #fff;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25), 0 4px 12px rgba(249,115,22,0.15);
+            border: 3px solid #ffffff;
             aspect-ratio: 16/9;
             transition: transform 0.25s cubic-bezier(.4,2,.6,1), box-shadow 0.25s;
             image-rendering: auto;
@@ -82,8 +82,8 @@
         }
 
         .event-image:hover {
-            transform: scale(1.025) rotate(-0.5deg);
-            box-shadow: 0 12px 40px rgba(249,115,22,0.18), 0 2px 8px rgba(0,0,0,0.12);
+            transform: scale(1.03) rotate(-0.5deg);
+            box-shadow: 0 16px 48px rgba(249,115,22,0.25), 0 6px 16px rgba(0,0,0,0.15);
             border-color: #f97316;
         }
         
@@ -100,7 +100,7 @@
         
         /* Add high-quality image fallback */
         .event-image.fallback {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -114,13 +114,13 @@
             left: 0;
             right: 0;
             bottom: 0; /* Sits flush with the bottom of the card */
-            background: linear-gradient(transparent, rgba(0,0,0,0.95));
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
             padding: 32px 24px 32px 24px; /* Generous bottom padding */
             color: white;
             border-radius: 0 0 20px 20px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             z-index: 2;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
             min-height: 160px;
             display: flex;
             flex-direction: column;
@@ -191,7 +191,7 @@
         
         .progress-fill {
             height: 100%;
-            background: #ef4444;
+            background: #f97316;
             transition: width 0.3s ease;
             border-radius: 12px 12px 0 0;
         }
@@ -301,7 +301,7 @@
                     <div class="no-events">
                         <h2 class="text-3xl font-bold mb-4">No events found</h2>
                         <p class="text-lg opacity-75 mb-6">Try adjusting your location or interests</p>
-                        <a href="{{ url_for('onboarding_location') }}" class="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition">
+                        <a href="{{ url_for('onboarding_location') }}" class="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-600 transition-all hover:scale-105 shadow-lg hover:shadow-xl">
                             Update Preferences
                         </a>
                     </div>
@@ -313,10 +313,10 @@
 
             <!-- Floating up/down navigation buttons -->
             <div id="arrow-nav" style="position: fixed; right: 40px; top: 50%; transform: translateY(-50%); z-index: 100; display: flex; flex-direction: column; gap: 18px;">
-                <button id="up-arrow-btn" onclick="previousEvent()" aria-label="Previous event" style="background: rgba(30,30,30,0.85); border: none; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.18); cursor: pointer; transition: background 0.2s;">
+                <button id="up-arrow-btn" onclick="previousEvent()" aria-label="Previous event" style="background: #f97316; border: none; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#ea580c'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.4)'" onmouseout="this.style.background='#f97316'; this.style.boxShadow='0 4px 12px rgba(249, 115, 22, 0.3)'" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </button>
-                <button id="down-arrow-btn" onclick="nextEvent()" aria-label="Next event" style="background: rgba(30,30,30,0.85); border: none; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.18); cursor: pointer; transition: background 0.2s;">
+                <button id="down-arrow-btn" onclick="nextEvent()" aria-label="Next event" style="background: #f97316; border: none; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#ea580c'; this.style.boxShadow='0 6px 16px rgba(249, 115, 22, 0.4)'" onmouseout="this.style.background='#f97316'; this.style.boxShadow='0 4px 12px rgba(249, 115, 22, 0.3)'" onmousedown="this.style.transform='scale(0.95)'" onmouseup="this.style.transform='scale(1)'">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
             </div>
@@ -469,7 +469,7 @@ function likeEvent(button) {
     button.classList.toggle('liked');
     const svg = button.querySelector('.heart-icon');
     const fillPath = svg.querySelector('.heart-fill');
-    fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
+    fillPath.setAttribute('fill', button.classList.contains('liked') ? '#f97316' : 'none');
 
     button.style.transform = 'scale(1.2)';
     setTimeout(() => button.style.transform = 'scale(1)', 200);
@@ -492,13 +492,13 @@ function likeEvent(button) {
     .then(data => {
         if (data.status !== 'success') {
             button.classList.toggle('liked');
-            fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
+            fillPath.setAttribute('fill', button.classList.contains('liked') ? '#f97316' : 'none');
             alert(data.message || 'Error liking/unliking event');
         }
     })
     .catch(() => {
         button.classList.toggle('liked');
-        fillPath.setAttribute('fill', button.classList.contains('liked') ? '#ef4444' : 'none');
+        fillPath.setAttribute('fill', button.classList.contains('liked') ? '#f97316' : 'none');
         alert('Error liking/unliking event');
     });
 }
@@ -512,7 +512,7 @@ function likeEvent(button) {
         transition: fill 0.2s;
     }
     .like-btn.liked .heart-fill {
-        fill: #ef4444 !important;
+        fill: #f97316 !important;
     }
     </style>
     
