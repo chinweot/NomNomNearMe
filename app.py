@@ -5,6 +5,7 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
+import sqlite3
 
 import db
 import math
@@ -482,6 +483,37 @@ def api_posted_events():
     posted_events = db.get_events_posted_by_user(user_id)
     return jsonify({'status': 'success', 'events': posted_events}), 200
 
+@app.route("/account")
+def account():
+    if 'user_id' not in session:
+        return redirect(url_for('home'))
+    
+    user_id = session['user_id']
+    
+    try:
+        # Get user basic info (name and email)
+        '''
+        user_info = db.get_user_info(user_id)
+        username = user_info['name'] if user_info else 'User'
+        email = user_info['email'] if user_info else 'user@example.com'
+        '''
+
+        username='co2323'
+        email = 'co2323@nyu.edu'
+        
+        # Get liked events
+        liked_events = db.get_liked_events(user_id)
+        
+    except Exception as e:
+        print(f"Error in account route: {e}")
+        username = 'User'
+        email = 'user@example.com'
+        liked_events = []
+    
+    return render_template('account.html', 
+                         username=username,
+                         email=email,
+                         liked_events=liked_events)
 if __name__ == "__main__":
     app.run(debug=True)
 
