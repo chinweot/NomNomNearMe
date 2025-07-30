@@ -501,14 +501,10 @@ def account():
     
     try:
         # Get user basic info (name and email)
-        '''
         user_info = db.get_user_info(user_id)
         username = user_info['name'] if user_info else 'User'
         email = user_info['email'] if user_info else 'user@example.com'
-        '''
 
-        username='co2323'
-        email = 'co2323@nyu.edu'
         
         # Get liked events
 

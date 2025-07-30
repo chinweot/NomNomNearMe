@@ -361,5 +361,22 @@ def get_events_posted_by_user(user_id: int) -> list:
     
     return posted_events
 
+def get_user_info(user_id: int) -> dict:
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT name, email
+        FROM users
+        WHERE id = ?
+    """, (user_id,))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        return {"name": row[0], "email": row[1]}
+    return None
+
+
 if __name__ == "__main__":
     init_auth_db()
