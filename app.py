@@ -5,11 +5,8 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
-<<<<<<< HEAD
 import sqlite3
-=======
 import re
->>>>>>> 4f81b22538be83262fada0d3eca74396cf2c4b7e
 
 import db
 import math
