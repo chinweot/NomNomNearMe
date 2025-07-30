@@ -14,7 +14,6 @@ from apis.user_events import init_user_events_db, add_user_event, get_user_event
 from apis.google_events import get_google_events
 import google.generativeai as genai
 
-# Set upload folder before using it
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -93,7 +92,6 @@ def gemini_tag(title, description):
 
 init_auth_db()
 init_user_events_db()
-MOCK_USER_ID = 1
 # ---------- AUTHENTICATION ----------
 
 # ---------- USER FREE EVENTS ----------
@@ -153,11 +151,13 @@ def signup():
         password = form.password.data 
         phone = form.phone.data
 
+
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
-            session['user_id'] = MOCK_USER_ID 
+            # Use the real user id returned from register_user
+            session['user_id'] = result.get('user_id')
             return redirect(url_for('onboarding_location'))
-        else: 
+        else:
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
             error_message = result['message']  # Capture the error message
 
@@ -206,9 +206,11 @@ def home():
 
         result = login_user(username, password) 
 
+
         if result["status"] == "access granted":
-            session['user_id'] = MOCK_USER_ID
-            return redirect(url_for('for_you')) 
+            # Use the real user id returned from login_user
+            session['user_id'] = result.get('user_id')
+            return redirect(url_for('for_you'))
         else:
             print(f"LOGIN FAILED WITH STATUS {result['status']}")
             # No redirect, stay on the login page to show error
@@ -240,7 +242,7 @@ def about():
 def api_save_event():
     if 'user_id' not in session:
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
-    user_id = MOCK_USER_ID
+    user_id = session.get('user_id')
     event_data = request.json
 
     if not event_data:
@@ -258,7 +260,7 @@ def api_delete_saved_event():
     if 'user_id' not in session:
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
 
-    user_id = MOCK_USER_ID
+    user_id = session.get('user_id')
     event_global_id = request.json.get('global_id')
 
     if not event_global_id:
@@ -272,7 +274,7 @@ def api_delete_saved_event():
 
 @app.route('/api/saved_events', methods=['GET'])
 def api_saved_events():
-    user_id = MOCK_USER_ID
+    user_id = session.get('user_id')
     if not user_id:
         return jsonify({'message': 'User not logged in'}), 401
     saved_events = db.get_saved_events(user_id) 
@@ -534,32 +536,32 @@ def api_posted_events():
     posted_events = db.get_events_posted_by_user(user_id)
     return jsonify({'status': 'success', 'events': posted_events}), 200
 
+
 @app.route("/account")
 def account():
     if 'user_id' not in session:
         return redirect(url_for('home'))
-    
-    user_id = session['user_id']
-    
-    try:
-        # Get user basic info (name and email)
-        user_info = db.get_user_info(user_id)
-        username = user_info['name'] if user_info else 'User'
-        email = user_info['email'] if user_info else 'user@example.com'
 
-        
-        # Get liked events
+    user_id = session['user_id']
+
+    try:
+        # Always fetch the current user's info from the database
+        user_info = db.get_user_info(user_id)
+        if user_info:
+            username = user_info.get('username') or user_info.get('name') or 'User'
+            email = user_info.get('email', 'user@example.com')
+        else:
+            username = 'User'
+            email = 'user@example.com'
 
         liked_events = db.get_liked_events(user_id)
-
         print(f"[DEBUG] Liked events returned: {liked_events}")
-        
     except Exception as e:
         print(f"Error in account route: {e}")
         username = 'User'
         email = 'user@example.com'
         liked_events = []
-    
+
     return render_template('account.html', 
                          username=username,
                          email=email,
