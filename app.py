@@ -5,7 +5,11 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
+<<<<<<< HEAD
 import sqlite3
+=======
+import re
+>>>>>>> 4f81b22538be83262fada0d3eca74396cf2c4b7e
 
 import db
 import math
@@ -24,6 +28,17 @@ if GEMINI_API_KEY:
     gemini_model = genai.GenerativeModel("gemini-2.5-flash")
 else:
     gemini_model = None
+
+# Jinja2 filter for upscaling Google image URLs
+@app.template_filter('upscale_google_img')
+def upscale_google_img(url):
+    if not url:
+        return url
+    # Look for Google image URL patterns with =wXXX-hXXX or =sXXX at the end
+    # Replace with =w1200-h900 for higher res
+    upscale = re.sub(r'=w\d+-h\d+(-[a-z])?', '=w1200-h900', url)
+    upscale = re.sub(r'=s\d+(-[a-z])?', '=w1200-h900', upscale)
+    return upscale
 
 def gemini_tag(title, description):
     if not gemini_model:
