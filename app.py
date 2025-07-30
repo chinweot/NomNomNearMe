@@ -4,6 +4,10 @@ from forms import RegistrationForm, LoginForm
 from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
+from datetime import datetime, timedelta, timezone
+from mailer import send_email
+from phone_api import send_sms
+import sqlite3
 import google.generativeai as genai
 import db
 
@@ -38,7 +42,7 @@ def gemini_tag(title, description):
 
 init_auth_db()
 init_user_events_db()
-MOCK_USER_ID = 1
+#MOCK_USER_ID = 1
 # ---------- AUTHENTICATION ----------
 
 # ---------- USER FREE EVENTS ----------
@@ -86,7 +90,7 @@ def signup():
 
         result = register_user(username, email, password, phone)
         if result['status'] == 'success':
-            session['user_id'] = MOCK_USER_ID
+            session['user_id'] = result['user_id']
             return redirect(url_for('onboarding_location'))
         else: 
             print(f"REGISTRATION FAILED WITH STATUS {result['status']}")
@@ -136,7 +140,7 @@ def home():
         result = login_user(username, password) 
 
         if result["status"] == "access granted":
-            session['user_id'] = MOCK_USER_ID
+            session['user_id'] =  result['user_id']
             return redirect(url_for('for_you')) 
         else:
             print(f"LOGIN FAILED WITH STATUS {result['status']}")
@@ -149,7 +153,8 @@ def home():
 @app.route("/search")
 def search():
     if 'user_id' not in session:
-        session['user_id'] = MOCK_USER_ID # TEMPORARY
+        return redirect(url_for('home'))
+        #session['user_id'] = MOCK_USER_ID # TEMPORARY
     return render_template("search.html")
 
 
@@ -157,9 +162,12 @@ def search():
 @app.route("/for_you")
 def for_you():
     if 'user_id' not in session:
-        session['user_id'] = MOCK_USER_ID # TEMPORARY
+        return redirect(url_for('home'))
+        #session['user_id'] = MOCK_USER_ID # TEMPORARY
     location = session.get('user_location', 'New York')
     # Get user events and use Gemini to tag
+    user_id =session['user_id']
+    send_event_reminders(user_id)
     user_events = get_user_events()
     for ue in user_events:
         title = ue.get('title', '')
@@ -224,7 +232,7 @@ def about():
 def api_save_event():
     if 'user_id' not in session:
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
-    user_id = MOCK_USER_ID
+    user_id = session['user_id']
     event_data = request.json
 
     if not event_data:
@@ -242,7 +250,7 @@ def api_delete_saved_event():
     if 'user_id' not in session:
         return jsonify({"status": "fail", "message": "User not logged in."}), 401
 
-    user_id = MOCK_USER_ID
+    user_id = session['user_id']
     event_global_id = request.json.get('global_id')
 
     if not event_global_id:
@@ -256,10 +264,19 @@ def api_delete_saved_event():
 
 @app.route('/api/saved_events', methods=['GET'])
 def api_saved_events():
-    user_id = MOCK_USER_ID
-    if not user_id:
+    #user_id = MOCK_USER_ID
+    if 'user_id' not in session:
         return jsonify({'message': 'User not logged in'}), 401
-    saved_events = db.get_saved_events(user_id) # Assuming db.get_saved_events exists
+    #if not user_id:
+    user_id=session['user_id']
+    try:
+        saved_events = db.get_saved_events(user_id)
+        # Assuming db.get_saved_events exists
+        return jsonify({'status':'success','events':saved_events}),200
+    except:
+        print(" error fetching")
+        return jsonify({'status':'failed','message':'Error fetching save events'}),500
+
     return jsonify({'events': saved_events})
 
 # ---------- FETCH API DATA ----------
@@ -281,7 +298,98 @@ def api_events():
     except Exception as e:
         print(f"Error in api_events: {e}")
         return jsonify({"error" : str(e)}), 502
-        
+def send_event_reminders(user_id):
+    now = datetime.now(timezone.utc)
+    one_hour_later = now + timedelta(hours=1)
+    ten_mins_later = now + timedelta(minutes=10)
+
+    conn = sqlite3.connect("user_info.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT e.id, u.email, u.phone, e.event_title, e.event_date, e.event_location, e.event_url, e.reminder_sent, e.sms_sent
+        FROM saved_events e
+        JOIN users u ON u.id = e.user_id
+        WHERE e.user_id = ?
+    """, (user_id,))
+    rows = cursor.fetchall()
+
+    for event_id, email, phone, title, event_date, location, url, reminder_sent, sms_sent in rows:
+        if not event_date:
+            continue
+
+        try:
+            event_dt = datetime.fromisoformat(event_date)
+            if event_dt.tzinfo is None:
+                event_dt = event_dt.replace(tzinfo=timezone.utc)
+
+            # 1. Email reminder (1 hour before)
+            if reminder_sent == 0 and now < event_dt <= one_hour_later:
+                subject = f"Reminder: {title} starts in 1 hour"
+                body = f"""
+Hello!
+
+Your event "{title}" starts in 1 hour.
+
+Location: {location}
+Event Link: {url if url else 'No link available'}
+
+Thank you,
+Nom Nom Me Team
+                """
+                send_email(email, subject, body)
+                cursor.execute("UPDATE saved_events SET reminder_sent = 1 WHERE id = ?", (event_id,))
+                conn.commit()
+
+            # 2. SMS reminder (10 minutes before)
+            if sms_sent == 0 and now < event_dt <= ten_mins_later and phone:
+                sms_body = f"Reminder: '{title}' starts in 10 minutes at {location}."
+                send_sms(phone, sms_body)
+                cursor.execute("UPDATE saved_events SET sms_sent = 1 WHERE id = ?", (event_id,))
+                conn.commit()
+
+        except ValueError:
+            print(f"Invalid date format for event: {title}")
+
+    conn.close()
+    """
+    #now = datetime.utcnow()
+    one_hour_later = now + timedelta(hours=1)
+
+    conn = sqlite3.connect("user_info.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        #SELECT e.id, u.email, e.event_title, e.event_date, e.event_location, e.event_url, e.reminder_sent
+        #FROM saved_events e
+        #JOIN users u ON u.id = e.user_id
+        #WHERE e.user_id = ?
+    """, (user_id,))
+    rows = cursor.fetchall() 
+
+    for event_id, email, title, event_date, location, url, reminder_sent in rows:
+        if event_date and reminder_sent == 0:
+            try:
+                event_dt = datetime.fromisoformat(event_date)
+                if now < event_dt <= one_hour_later:
+                    subject = f"Reminder: {title} starts in 1 hour"
+                    body = f"""
+#Hello!
+
+#Your event "{title}" starts in 1 hour.
+
+#ocation: {location}
+#Event Link: {url if url else 'No link available'}
+
+#Thank you,
+#Nom Nom Me Team
+"""
+                    send_email(email, subject, body)
+                    cursor.execute("UPDATE saved_events SET reminder_sent = 1 WHERE id = ?", (event_id,))
+                    conn.commit()
+            except ValueError:
+                print(f"Invalid date format for event: {title}")
+
+    conn.close()     
+"""
 
 if __name__ == "__main__":
     app.run(debug=True)
