@@ -5,11 +5,8 @@ from apis.event_handler import search_all_events
 from apis.user_events import init_user_events_db, add_user_event, get_user_events
 from apis.google_events import get_google_events
 import google.generativeai as genai
-<<<<<<< HEAD
 import sqlite3
-=======
 import re
->>>>>>> 4f81b22538be83262fada0d3eca74396cf2c4b7e
 
 import db
 import math
@@ -514,7 +511,10 @@ def account():
         email = 'co2323@nyu.edu'
         
         # Get liked events
+
         liked_events = db.get_liked_events(user_id)
+
+        print(f"[DEBUG] Liked events returned: {liked_events}")
         
     except Exception as e:
         print(f"Error in account route: {e}")
@@ -526,6 +526,7 @@ def account():
                          username=username,
                          email=email,
                          liked_events=liked_events)
+
 if __name__ == "__main__":
     app.run(debug=True)
 
