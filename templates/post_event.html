@@ -56,7 +56,14 @@
           </div>
           {% endif %}
 
-          <form method="POST" action="/post_event" class="space-y-6">
+          <form method="POST" action="/post_event" enctype="multipart/form-data" class="space-y-6">
+            <div class="input-container">
+              <label for="image" class="block text-gray-700 font-medium mb-2">
+                <span class="text-lg mr-2">🖼️</span>Event Image (optional)
+              </label>
+              <input type="file" id="image" name="image" accept="image/*"
+                class="w-full px-4 py-3 border rounded-lg border-gray-300 focus:outline-none bg-gray-50 transition-all">
+            </div>
             
             <div class="input-container">
               <label for="title" class="block text-gray-700 font-medium mb-2">

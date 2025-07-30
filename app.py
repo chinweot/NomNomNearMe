@@ -1,3 +1,39 @@
+import os
+import re
+import os
+import re
+import math
+import sqlite3
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from werkzeug.utils import secure_filename
+from db import init_auth_db, register_user, login_user, save_event, get_saved_events, delete_saved_event
+from forms import RegistrationForm, LoginForm
+from apis.event_handler import search_all_events
+from apis.user_events import init_user_events_db, add_user_event, get_user_events
+from apis.google_events import get_google_events
+import google.generativeai as genai
+
+# Set upload folder before using it
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Tag to default image mapping
+TAG_IMAGES = {
+    'food': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=800&fit=crop&q=90',
+    'music': 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=800&fit=crop&q=90',
+    'sports': 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop&q=90',
+    'comedy': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=1200&h=800&fit=crop&q=90',
+    'networking': 'https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?w=1200&h=800&fit=crop&q=90',
+    'art': 'https://images.unsplash.com/photo-1464983953574-0892a716854b?w=1200&h=800&fit=crop&q=90',
+    'education': 'https://images.unsplash.com/photo-1503676382389-4809596d5290?w=1200&h=800&fit=crop&q=90',
+    'festival': 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200&h=800&fit=crop&q=90',
+    'other': 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
+}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from db import init_auth_db, register_user, login_user, save_event, get_saved_events, delete_saved_event
 from forms import RegistrationForm, LoginForm
@@ -14,9 +50,11 @@ from dotenv import load_dotenv
 import os
 
 
+
 load_dotenv()  
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'Wnv1I6Tsd7')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Configure Gemini API
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -67,15 +105,22 @@ def post_event():
         location = request.form.get("location", "").strip()
         event_time = request.form.get("event_time", "").strip()
         timezone = request.form.get("timezone", "").strip()
-        tag = request.form.get("tag", "other").strip().lower()  # New: get tag from form
-        description = request.form.get("description", "").strip()  # Optionally get description
+        tag = request.form.get("tag", "other").strip().lower()
+        description = request.form.get("description", "").strip()
+        image_url = None
+        # Handle file upload
+        if 'image' in request.files:
+            file = request.files['image']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_url = f"/static/uploads/{filename}"
         if not (title and location and event_time and timezone and tag):
             return render_template("post_event.html", error="All fields are required.")
-        # Pass tag to add_user_event if supported, else store in description for now
+        # Save event with image_url in description (or extend DB if needed)
         try:
-            add_user_event(title, location, event_time, timezone, tag, description)
+            add_user_event(title, location, event_time, timezone, tag, description + (f"\n[IMAGE]{image_url}" if image_url else ""))
         except TypeError:
-            # Fallback for legacy add_user_event signature
             add_user_event(title, location, event_time, timezone)
         return redirect(url_for("user_events"))
     return render_template("post_event.html")
@@ -317,7 +362,13 @@ def for_you():
         ue['description'] = ue.get('description', '')
         ue['address'] = ue.get('location', '')
         ue['link'] = ''
-        ue['image'] = '/static/img/logo.png'
+        # Try to extract uploaded image from description
+        img_url = None
+        if ue['description'] and '[IMAGE]' in ue['description']:
+            parts = ue['description'].split('[IMAGE]')
+            ue['description'] = parts[0].strip()
+            img_url = parts[1].strip()
+        ue['image'] = img_url or TAG_IMAGES.get(ue['tag'], TAG_IMAGES['other'])
         filtered_user_events.append(ue)
 
     # Fetch and tag api events
@@ -374,18 +425,9 @@ def for_you():
                 # For Google Maps images, try to get higher resolution
                 image = str(image).replace('size=120x120', 'size=1200x800')
                 image = str(image).replace('zoom=15', 'zoom=18')
-            
             ge['image'] = image
         else:
-            # If no image found, try to generate a placeholder based on event type
-            if 'music' in tag.lower() or 'concert' in title.lower():
-                ge['image'] = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&h=800&fit=crop&q=90'
-            elif 'food' in tag.lower() or 'restaurant' in title.lower():
-                ge['image'] = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
-            elif 'sport' in tag.lower() or 'fitness' in title.lower():
-                ge['image'] = 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&h=800&fit=crop&q=90'
-            else:
-                ge['image'] = 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1200&h=800&fit=crop&q=90'
+            ge['image'] = TAG_IMAGES.get(tag, TAG_IMAGES['other'])
 
     # Combine all events (only user events in user's city)
     all_events = filtered_user_events + google_events
